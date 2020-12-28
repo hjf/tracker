@@ -1,0 +1,12 @@
+{
+  "location": {
+    "latitude": -27.27,
+    "longitude": -59.00,
+    "altitude": 50
+  },
+  "tles": [
+    "amateur.txt",
+    "weather.txt"
+  ],
+  "tle_max_age": 7
+}

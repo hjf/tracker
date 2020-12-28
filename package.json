@@ -9,6 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "tle.js": "^4.2.8"
+    "core-js": "^3.8.1",
+    "dayjs": "^1.9.8",
+    "jspredict": "^1.1.1",
+    "request": "^2.88.2",
+    "tle.js": "^4.2.8",
+    "yargs": "^16.2.0"
   }
 }
