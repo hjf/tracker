@@ -1,4 +1,7 @@
 {
+  "webserver": {
+    "port": 3033
+  },
   "location": {
     "latitude": -27.27,
     "longitude": -59.00,
