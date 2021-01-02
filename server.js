@@ -29,7 +29,7 @@ const RadioController = require('./modules/radio-controller');
       })
 
       app.get('/getGroundStationLocation', async (req, res) => {
-        res.json(JSON.parse(await db.getSetting('ground_station_location')))
+        res.json(await db.getSetting('ground_station_location'))
       })
 
       app.get('/upcomingPasses', async (req, res) => {
@@ -46,7 +46,7 @@ const RadioController = require('./modules/radio-controller');
       logger.add(new socketioTransport({ io: io, level: 'debug', 'timestamp': true }))
 
 
-      const location = JSON.parse(await db.getSetting('ground_station_location'))
+      const location = await db.getSetting('ground_station_location')
       const trackerController = new TrackerController(io, location);
       const radioController = new RadioController(io)
 

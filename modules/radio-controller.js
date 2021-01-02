@@ -31,7 +31,7 @@ module.exports = class RadioController {
         logger.debug(`Will capture ${nsamples} samples`)
 
         let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.wav`
-        filename=path.join(os.tmpdir(),filename)
+        filename = path.join(os.tmpdir(), filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
         let args = [

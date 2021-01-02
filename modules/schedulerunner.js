@@ -27,7 +27,7 @@ module.exports = class ScheduleRunner {
       const events = await db.getScheduledEventsToRun()
 
       if (events.length === 0) {
-        setTimeout(()=>{logger.debug("No pending scheduled events")},10)        
+        setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
         return false
       }
 
@@ -72,13 +72,13 @@ module.exports = class ScheduleRunner {
             logger.debug("Starting tracker")
             this.trackerController.startTracking(action.satellite, duration)
             logger.debug("Starting capture")
-
             let capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration)
 
             capture
               .then(res => {
+                let baseband_file = res.filename
+                
                 logger.info(`Event #${event.schedule_id} ended successfully.`)
-
                 db.changeEventStatus(event.schedule_id, 'done', res)
               })
               .catch(err => {

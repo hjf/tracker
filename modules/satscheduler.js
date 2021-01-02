@@ -6,7 +6,7 @@ const dayjs = require('dayjs')
 async function generateSchedule(force) {
   try {
     logger.info("Generating predictions")
-    const location = JSON.parse(await db.getSetting('ground_station_location'));
+    const location = await db.getSetting('ground_station_location');
     const min_elevation = await db.getSetting('satellite_min_elevation') || 10;
 
     let passes = await db.getScheduledEvents('satellite_pass')

@@ -66,7 +66,8 @@ async function changeEventStatus(schedule_id, run_status, result) {
 
 async function getSatellites() {
   let db = await getConnection();
-  return await db.all(`SELECT * FROM satellites`)
+  let sats = await db.all(`SELECT * FROM satellites`)
+  return sats.map(x => { x.pipeline = JSON.parse(x.pipeline); return x; })
 }
 
 async function updateTLE(catalog_number, tle) {
@@ -80,7 +81,7 @@ async function updateTLE(catalog_number, tle) {
 async function getSetting(key) {
   let db = await getConnection();
   let res = await db.get('SELECT value FROM settings WHERE key=?', [key])
-  if (res && res.value) return res.value
+  if (res && res.value) return JSON.parse(res.value)
   return null
   //throw new Error(`Key ${key} not found in settings`)
 }
