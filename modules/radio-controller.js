@@ -6,7 +6,14 @@ const os = require('os')
 const { spawn } = require('child_process');
 const { resolve } = require('path');
 
-const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
+//const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
+const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
+
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint8Array(buf));
+}
+
+
 
 module.exports = class RadioController {
   constructor(io) {
@@ -38,13 +45,14 @@ module.exports = class RadioController {
           '-h', '20', //gain mode "sensitivity", value 20
           '-n', nsamples,
           '-t', '2', //sample type 2=INT16_IQ(default)
+          '-a', samplerate.toString(),
           '-r', filename
         ]
 
         this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd })
 
-        this.currentprocess.stderr.on('data', (data) => { stderr += data })
-        this.currentprocess.stdout.on('data', (data) => { stdout += data })
+        this.currentprocess.stderr.on('data', (data) => { data=ab2str(data); logger.debug(data); stderr += data })
+        this.currentprocess.stdout.on('data', (data) => { data=ab2str(data); logger.debug(data); stdout += data })
 
         this.currentprocess.on('exit', (code) => {
           logger.info(`airspy_rx ended with code ${code}.`)

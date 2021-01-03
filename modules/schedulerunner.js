@@ -24,12 +24,12 @@ module.exports = class ScheduleRunner {
 
       this.busy = true
 
-      // logger.debug("Schedule runner started")
+//       logger.debug("Schedule runner started")
 
       const events = await db.getScheduledEventsToRun()
 
       if (events.length === 0) {
-        // setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
+//         setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
         return false
       }
 

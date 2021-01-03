@@ -1,5 +1,4 @@
 global.original_cwd;
-console.log(`CWD: ${global.original_cwd}`)
 global.original_cwd = process.cwd();
 const fs = require("fs")
 var app = require('express')();

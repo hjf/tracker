@@ -26,7 +26,7 @@ async function updateTLEs(force, io) {
           logger.debug(`Downloading TLE file ${sat.tle_file}`)
 
           let url = `${CELESTRAK_BASE}${sat.tle_file}`;
-          const response = await axios.get(url);
+          const response = await axios.get(url,{timeout:5000});
           tlefiles[sat.tle_file] = response.data
         }
 

@@ -87,14 +87,14 @@ async function NOAA_AVHRR_Decoder(input_file, args) {
 }
 
 async function C_BPSK_Demodulator(input_file, args) {
-  return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset)
+  return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset, 3000000)
 }
 
 async function QPSK_Demodulator(input_file, args) {
-  return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset)
+  return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset, 6000000)
 }
 
-async function Aang23DemodsBase(command, input_file, preset) {
+async function Aang23DemodsBase(command, input_file, preset, sample_rate) {
 
   logger.debug("Starting demod")
 
@@ -104,7 +104,8 @@ async function Aang23DemodsBase(command, input_file, preset) {
   let args = [
     '--preset', preset,
     '--input', input_file,
-    '--output', output_file
+    '--output', output_file,
+    '-s', sample_rate
   ]
 
 
@@ -126,7 +127,8 @@ function GenericSpawner(command, args) {
       let stderr = ""
       let stdout = ""
 
-      command = path.join(global.original_cwd, 'modules', 'decoders', command + '.exe')
+//      command = path.join(global.original_cwd, 'modules', 'decoders', command + '.exe')
+      command=path.join('/usr/local/bin',command)
       this.spwaned_process = spawn(command, args, { cwd: cwd })
 
       this.spwaned_process.stderr.on('data', (data) => { stderr += data })
