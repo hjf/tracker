@@ -2,24 +2,22 @@ const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
-const process = require('process')
+//const proc = require('process')
 const { spawn } = require('child_process');
 const { resolve } = require('path');
-const { stdout } = require('process');
 
-
-const AIRSPY_RX_EXECUTABLE = path.join(process.cwd(), 'modules', 'airspyrx', 'airspy_rx.exe')
+const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
 
 module.exports = class RadioController {
   constructor(io) {
     this.io = io
     this.busy = false
-    this.process = null
+    this.currentprocess = null
   }
 
   isBusy() { return this.busy }
 
-  async startCapture(frequency, samplerate, duration_ms) {
+  async startCapture(frequency, samplerate, duration_ms, cwd) {
     return new Promise((resolve, reject) => {
       try {
 
@@ -31,7 +29,7 @@ module.exports = class RadioController {
         logger.debug(`Will capture ${nsamples} samples`)
 
         let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.wav`
-        filename = path.join(os.tmpdir(), filename)
+        filename = path.join(filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
         let args = [
@@ -43,17 +41,17 @@ module.exports = class RadioController {
           '-r', filename
         ]
 
-        this.process = spawn(AIRSPY_RX_EXECUTABLE, args)
+        this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd })
 
-        this.process.stderr.on('data', (data) => { stderr += data })
-        this.process.stdout.on('data', (data) => { stdout += data })
+        this.currentprocess.stderr.on('data', (data) => { stderr += data })
+        this.currentprocess.stdout.on('data', (data) => { stdout += data })
 
-        this.process.on('exit', (code) => {
+        this.currentprocess.on('exit', (code) => {
           logger.info(`airspy_rx ended with code ${code}.`)
-          resolve({ filename: filename, stdout: stdout, stderr: stderr })
+          resolve({ filename: filename })//, stdout: stdout, stderr: stderr })
         })
 
-        this.process.on('error', (err) => {
+        this.currentprocess.on('error', (err) => {
           logger.info(`Error spawning airspy_rx: ${err}.`)
           reject({ error: err })
         })

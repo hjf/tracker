@@ -1,12 +1,12 @@
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const { add } = require('./logger');
-
+const path = require('path')
 
 function getConnection() {
   return new Promise((resolve, reject) => {
     open({
-      filename: 'tracker.sqlite',
+      filename: path.join(global.original_cwd, 'tracker.sqlite'),
       driver: sqlite3.cached.Database
     })
       .then((db) => { resolve(db) })
@@ -18,10 +18,12 @@ function getConnection() {
 async function getScheduledEvents(schedule_type) {
   let now = new Date().getTime();
   let db = await getConnection();
-
+  let rv = []
   if (schedule_type)
-    return await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND schedule_type= :schedule_type AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now, ":schedule_type": schedule_type })
-  return await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now })
+    rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND schedule_type= :schedule_type AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now, ":schedule_type": schedule_type })
+  rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now })
+
+  return rv.map(x => { x.action = JSON.parse(x.action); return x })
 }
 
 async function getScheduledEventsToRun(schedule_type) {

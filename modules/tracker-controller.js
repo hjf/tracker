@@ -20,7 +20,9 @@ module.exports = class TrackerController {
           this.rotor_status = res.data
           if (this.io) this.io.emit('tracker', this.getStatus())
         })
-        .catch(err => logger.error(err))
+        .catch(err => {
+          //logger.error(err)
+        })
     }, 1000);
   }
 
@@ -46,7 +48,9 @@ module.exports = class TrackerController {
       let el = (observation.elevation * 10).toFixed(0)
       axios.get(`http://${rotor_address}/set?g=G01 A${az} E${el} F-1`)
         .then(res => { })
-        .catch(err => logger.error(err))
+        .catch(err => {
+          //logger.error(err)
+        })
     }, 1000);
 
     setTimeout(() => { this.stopTracking() }, tracker_timeout)

@@ -1,7 +1,9 @@
 const logger = require('../logger')
 const db = require('../db.js');
-const { identity } = require('lodash');
-
+const pipeline = require('./pipeline');
+const os = require('os');
+const fs = require('fs');
+const path = require('path')
 //https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
 function fmtMSS(s) { return (s - (s %= 60)) / 60 + (9 < s ? ':' : ':0') + s }
 
@@ -22,12 +24,12 @@ module.exports = class ScheduleRunner {
 
       this.busy = true
 
-      logger.debug("Schedule runner started")
+      // logger.debug("Schedule runner started")
 
       const events = await db.getScheduledEventsToRun()
 
       if (events.length === 0) {
-        setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
+        // setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
         return false
       }
 
@@ -65,6 +67,14 @@ module.exports = class ScheduleRunner {
 
             //naive algorithm to decide if N or S
             let direction = action.prediction.minAzimuth < 270 && action.prediction.minAzimuth >= 90 ? 'N' : 'S'
+            console.log(os.tmpdir())
+            let cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
+
+            logger.info(`Working directory: ${cwd}`)
+            try {
+              fs.mkdirSync(cwd)
+            } catch (err) { } 
+
 
             logger.info(`Pass duration is ${fmtMSS(duration / 1000)}, max elevation: ${action.prediction.maxElevation}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
@@ -72,12 +82,20 @@ module.exports = class ScheduleRunner {
             logger.debug("Starting tracker")
             this.trackerController.startTracking(action.satellite, duration)
             logger.debug("Starting capture")
-            let capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration)
+
+            os.tmp
+            let capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
 
             capture
-              .then(res => {
+              .then(async (res) => {
                 let baseband_file = res.filename
-                
+                logger.info("starting pipeline")
+                try {
+                  await pipeline(baseband_file, action.satellite, action.prediction.start, direction, cwd)
+                } catch (err) {
+                  console.error(err)
+                }
+
                 logger.info(`Event #${event.schedule_id} ended successfully.`)
                 db.changeEventStatus(event.schedule_id, 'done', res)
               })
