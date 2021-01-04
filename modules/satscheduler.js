@@ -13,7 +13,6 @@ async function generateSchedule(force) {
     if (passes.length > 0) {
       if (force) {
         let deleted = await db.deleteScheduledEvents('satellite_pass')
-        console.log(deleted)
         logger.info(`Passes for today already but 'force' was specified, deleting ${deleted} scheduled passes first`)
 
       } else {

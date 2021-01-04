@@ -82,7 +82,6 @@ async function updateTLE(catalog_number, tle) {
 }
 
 function getSetting(key) {
-  console.log(path.join(global.original_cwd, 'settings.json'))
   let settings = JSON.parse(fs.readFileSync(path.join(global.original_cwd, 'settings.json')))
   return settings[key]
 }

@@ -11,8 +11,7 @@ const bot = new TelegramBot(tconfig.access_token, { polling: true });
 
 async function postImage(filepath, caption) {
   let buf = await resizeImage(filepath)
-  console.log(buf)
-  let buf = buf[0].data
+  buf = buf[0].data
   return bot.sendPhoto(tconfig.chat_ids[0], buf, { caption: caption }, { filename: `${Date.now()}.jpg`, contentType: "image/jpeg" });
 }
 

@@ -67,7 +67,6 @@ module.exports = class ScheduleRunner {
 
             //naive algorithm to decide if N or S
             let direction = action.prediction.minAzimuth < 270 && action.prediction.minAzimuth >= 90 ? 'N' : 'S'
-            console.log(os.tmpdir())
             let cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
             logger.info(`Working directory: ${cwd}`)
