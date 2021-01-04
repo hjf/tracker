@@ -28,13 +28,13 @@ const RadioController = require('./modules/radio-controller');
     async function () {
       try {
 
-        const port = await db.getSetting('http_port')
+        const port = db.getSetting('http_port')
         app.get('/', (req, res) => {
           res.send('Hello World!')
         })
 
         app.get('/getGroundStationLocation', async (req, res) => {
-          res.json(await db.getSetting('ground_station_location'))
+          res.json(db.getSetting('ground_station_location'))
         })
 
         app.get('/upcomingPasses', async (req, res) => {
@@ -50,8 +50,8 @@ const RadioController = require('./modules/radio-controller');
         //sends log to web in real time
         logger.add(new socketioTransport({ io: io, level: 'debug', 'timestamp': true }))
 
-
-        const location = await db.getSetting('ground_station_location')
+console.log(JSON.stringify(await db.getSatellites()))
+        const location = db.getSetting('ground_station_location')
         const trackerController = new TrackerController(io, location);
         const radioController = new RadioController(io)
 

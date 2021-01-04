@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const { add } = require('./logger');
+const fs = require('fs')
 const path = require('path')
 
 function getConnection() {
@@ -80,12 +81,10 @@ async function updateTLE(catalog_number, tle) {
   return res.changes === 1;
 }
 
-async function getSetting(key) {
-  let db = await getConnection();
-  let res = await db.get('SELECT value FROM settings WHERE key=?', [key])
-  if (res && res.value) return JSON.parse(res.value)
-  return null
-  //throw new Error(`Key ${key} not found in settings`)
+function getSetting(key) {
+  console.log(path.join(global.original_cwd, 'settings.json'))
+  let settings = JSON.parse(fs.readFileSync(path.join(global.original_cwd, 'settings.json')))
+  return settings[key]
 }
 
 module.exports = {

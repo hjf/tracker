@@ -91,7 +91,7 @@ module.exports = class ScheduleRunner {
                 let baseband_file = res.filename
                 logger.info("starting pipeline")
                 try {
-                  await pipeline(baseband_file, action.satellite, action.prediction.start, direction, cwd)
+                  await pipeline(baseband_file, action.satellite, action.prediction, direction, cwd)
                 } catch (err) {
                   console.error(err)
                 }

@@ -2,6 +2,8 @@ const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
+const telegram = require('./telegram')
+
 const { spawn } = require('child_process');
 var glob = require("glob");
 const { resolve } = require('path');
@@ -16,12 +18,14 @@ handlers = {
   "MetOp-AVHRR-Decoder": MetOp_AVHRR_Decoder,
   "METEOR-Demux": METEOR_Demux,
   "METEOR-MSU-MR-Decoder": METEOR_MSU_MR_Decoder
+  "Telegram-Post": Telegram_Post
 }
 
-module.exports = async function pipeline(input_file, satellite, capture_start, direction, pcwd) {
+module.exports = async function pipeline(input_file, satellite, prediction, direction, pcwd) {
   return new Promise(async (resolve, reject) => {
     try {
       cwd = pcwd
+
 
       let previous_result = { filename: input_file }
       for (let step of satellite.pipeline) {
@@ -32,11 +36,11 @@ module.exports = async function pipeline(input_file, satellite, capture_start, d
         let input_file = previous_result.filename
         if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-        previous_result = await handler(input_file, step.program.args)
+        previous_result = await handler(input_file, step.program.args, { satellite: satellite, prediction: prediction })
 
         console.log(previous_result)
         if (step.program.args.delete)
-          fs.unlinkSync(path.join(pcwd,input_file))
+          fs.unlinkSync(path.join(pcwd, input_file))
       }
 
     }
@@ -47,12 +51,17 @@ module.exports = async function pipeline(input_file, satellite, capture_start, d
   })
 }
 
+async function Telegram_Post(input_file, args, passData) {
+  let caption = `${passData.satellite.name}, MEL ${passData.prediction.maxElevation}`
+  await telegram.postImage(input_file, caption)
+}
+
 async function METEOR_Demux(input_file, args) {
   let command = "meteor-demux"
   let output_file = `meteor_demux_${Date.now()}`
   let pargs = [
     '-i', input_file,
-    '-o', output_file
+    '-o', "met" //always use same prefix
   ]
   await GenericSpawner(command, pargs)
   return { filename: output_file }
@@ -60,9 +69,11 @@ async function METEOR_Demux(input_file, args) {
 
 async function METEOR_MSU_MR_Decoder(input_file, args) {
   let command = "METEOR-MSU-MR-Decoder"
-  let pargs = [input_file]
+  let pargs = ["met-msu-mr.bin"]//always use same prefix as set in METEOR_Demux
   await GenericSpawner(command, pargs)
-  return { filename: output_file }
+
+  //TODO: RGB file should only be returned during the day
+  return { filename: "MSU-MR-RGB-221-EQU.png" }
 }
 
 async function MetOp_AVHRR_Decoder(input_file, args) {
@@ -70,7 +81,9 @@ async function MetOp_AVHRR_Decoder(input_file, args) {
   let output_file = `metop_decoder_${Date.now()}.bin`
   await GenericSpawner(command, [input_file]);
   let pngs = glob.sync(path.join(cwd, '*.png'))
-  return { filename: output_file, filenames: pngs }
+
+  //TODO: RGB file should only be returned during the day
+  return { filename: "AVHRR-RGB-221-EQU.png", filenames: pngs }
 }
 
 async function MetOp_Decoder(input_file, args) {
@@ -83,7 +96,10 @@ async function MetOp_Decoder(input_file, args) {
 async function NOAA_AVHRR_Decoder(input_file, args) {
   let command = "NOAA-AVHRR-Decoder"
   await GenericSpawner(command, [input_file])
-  return { filename: input_file }
+  let pngs = glob.sync(path.join(cwd, '*.png'))
+
+  //TODO: RGB file should only be returned during the day
+  return { filename: "AVHRR-RGB-221-EQU.png", filenames: pngs }
 }
 
 async function C_BPSK_Demodulator(input_file, args) {
@@ -127,8 +143,8 @@ function GenericSpawner(command, args) {
       let stderr = ""
       let stdout = ""
 
-//      command = path.join(global.original_cwd, 'modules', 'decoders', command + '.exe')
-      command=path.join('/usr/local/bin',command)
+      //      command = path.join(global.original_cwd, 'modules', 'decoders', command + '.exe')
+      command = path.join('/usr/local/bin', command)
       this.spwaned_process = spawn(command, args, { cwd: cwd })
 
       this.spwaned_process.stderr.on('data', (data) => { stderr += data })

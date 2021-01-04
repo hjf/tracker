@@ -9,7 +9,7 @@ require('core-js/features/string/replace-all')
 async function updateTLEs(force, io) {
   logger.info("Checking if TLEs need updating")
   try {
-    const tle_max_age_days = await db.getSetting('tle_max_age_days') || 3;
+    const tle_max_age_days = db.getSetting('tle_max_age_days') || 3;
     logger.debug(`TLE max age is ${tle_max_age_days} days`)
 
     let maxage = new Date().getTime() / 1000 - tle_max_age_days * 86400;
