@@ -28,6 +28,10 @@ async function generateSchedule(force) {
     const sats = await db.getSatellites();
 
     for (let sat of sats) {
+      if (!sat.enabled) {
+        logger.debug(`Skipping disabled satellite ${sat.name} (${sat.catalog_number})`)
+        continue
+      }
 
       logger.debug(`Predicting for satellite ${sat.name} (${sat.catalog_number})`)
 
@@ -39,6 +43,36 @@ async function generateSchedule(force) {
         min_elevation,
         5
       )
+
+      const start_end_elevation = 10
+
+      //for each prediction, offset it until it's between start_end_elevation
+      let startTime = 0
+      for (let prediction of predictions) {
+        startTime = prediction.start;
+
+        let minelev = 0
+        do {
+          startTime += 5000;
+          minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], startTime).elevation
+        } while (minelev < start_end_elevation)
+        //logger.debug(`offsetting prediction start time by ${prediction.start-startTime} ms, min elev ${minelev}`)
+        prediction.start = startTime
+      }
+
+      for (let prediction of predictions) {
+        let endTime = prediction.end;
+
+        let minelev = 0
+        do {
+          endTime -= 5000;
+          minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], endTime).elevation
+        } while (minelev < start_end_elevation)
+        //logger.debug(`offsetting prediction start time by ${prediction.end-endTime} ms, min elev ${minelev}`)
+        prediction.end = endTime
+        prediction.duration = endTime - startTime
+      }
+
       logger.debug(`${predictions.length} passes found.`)
 
       for (let prediction of predictions) {
