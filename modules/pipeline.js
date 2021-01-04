@@ -17,7 +17,7 @@ handlers = {
   "MetOp-Decoder": MetOp_Decoder,
   "MetOp-AVHRR-Decoder": MetOp_AVHRR_Decoder,
   "METEOR-Demux": METEOR_Demux,
-  "METEOR-MSU-MR-Decoder": METEOR_MSU_MR_Decoder
+  "METEOR-MSU-MR-Decoder": METEOR_MSU_MR_Decoder,
   "Telegram-Post": Telegram_Post
 }
 
