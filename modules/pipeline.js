@@ -52,7 +52,10 @@ module.exports = async function pipeline(input_file, satellite, prediction, dire
 }
 
 async function Telegram_Post(input_file, args, passData) {
+  logger.debug(`Posting image to telegram ${input_file}, args: ${JSON.stringify(args, null, 2)}, pass data: ${JSON.stringify(passData, null, 2)}`)
   let caption = `${passData.satellite.name}, MEL ${passData.prediction.maxElevation}`
+  logger.debug(`Posted caption will be: ${caption}`)
+
   await telegram.postImage(input_file, caption)
 }
 
