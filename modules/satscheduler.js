@@ -46,9 +46,9 @@ async function generateSchedule(force) {
       const start_end_elevation = 10
 
       //for each prediction, offset it until it's between start_end_elevation
-      let startTime = 0
+      
       for (let prediction of predictions) {
-        startTime = prediction.start;
+        let startTime = prediction.start;
 
         let minelev = 0
         do {
@@ -60,6 +60,7 @@ async function generateSchedule(force) {
       }
 
       for (let prediction of predictions) {
+        let startTime = prediction.start;
         let endTime = prediction.end;
 
         let minelev = 0
