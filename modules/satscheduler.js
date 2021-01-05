@@ -43,7 +43,7 @@ async function generateSchedule(force) {
         5
       )
 
-      const start_end_elevation = 10
+      const start_end_elevation = db.getSetting('start_end_elevation') || 5
 
       //for each prediction, offset it until it's between start_end_elevation
       
