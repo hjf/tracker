@@ -53,11 +53,11 @@ module.exports = async function pipeline(input_file, satellite, prediction, dire
 
 async function Telegram_Post(input_file, args, passData) {
   filepath = path.join(cwd, input_file)
-  logger.debug(`Posting image to telegram ${input_file}, args: ${JSON.stringify(args, null, 2)}, pass data: ${JSON.stringify(passData, null, 2)}`)
+  logger.debug(`Posting image to telegram ${filepath}, args: ${JSON.stringify(args, null, 2)}, pass data: ${JSON.stringify(passData, null, 2)}`)
   let caption = `${passData.satellite.name}, MEL ${passData.prediction.maxElevation.toFixed(0)}`
   logger.debug(`Posted caption will be: ${caption}`)
 
-  await telegram.postImage(input_file, caption)
+  await telegram.postImage(filepath, caption)
 }
 
 async function METEOR_Demux(input_file, args) {
