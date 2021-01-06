@@ -1,7 +1,9 @@
 global.original_cwd;
 global.original_cwd = process.cwd();
 const fs = require("fs")
-var app = require('express')();
+var express=require('express')
+var app = express();
+var path=require('path');
 var http = require('http').createServer(app);
 var io = require('socket.io')(http, {
   cors: {
@@ -29,10 +31,11 @@ const RadioController = require('./modules/radio-controller');
       try {
 
         const port = db.getSetting('http_port')
-        app.get('/', (req, res) => {
-          res.send('Hello World!')
-        })
+app.use(express.static(path.join(__dirname, 'static')));
 
+app.get('/', function (req, res) {
+  res.sendFile(path.join(__dirname, 'static', 'index.html'));
+});
         app.get('/getGroundStationLocation', async (req, res) => {
           res.json(db.getSetting('ground_station_location'))
         })
