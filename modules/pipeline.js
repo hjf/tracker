@@ -61,7 +61,7 @@ async function Telegram_Post(input_file, args, passData) {
 }
 
 async function METEOR_Demux(input_file, args) {
-  let command = "meteor-demux"
+  let command = "METEOR-Demux"
   let output_file = `meteor_demux_${Date.now()}`
   let pargs = [
     '-i', input_file,
