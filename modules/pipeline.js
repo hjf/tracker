@@ -61,7 +61,7 @@ async function DenoiseAndRotate(denoise, passDirection) {
 
   if (passDirection === 'N') command += " -rotate 180 "
 
-  let workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.jpg`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
+  let workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.jpg`).catch(err => logger.error(`Error processing image ${filename}: ${err}`)))
   await Promise.all(workers)
   return true
 
