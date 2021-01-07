@@ -54,18 +54,14 @@ function thereIsLight(prediction) {
 
 async function DenoiseAndRotate(denoise, passDirection) {
 
-  if (!denoise && passDirection === 'S')
-    return false
-
   let pngs = glob.sync(path.join(cwd, '*.png'))
   let command = ""
 
   if (denoise) command += " -median 3 "
 
-
   if (passDirection === 'N') command += " -rotate 180 "
 
-  let workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.png`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
+  let workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.jpg`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
   await Promise.all(workers)
   return true
 
@@ -99,9 +95,9 @@ async function METEOR_MSU_MR_Decoder(input_file, args, passData) {
   let proc = DenoiseAndRotate(true, passData.direction)
 
   if (thereIsLight(passData.prediction))
-    return { filename: "MSU-MR-5.png" + (proc ? "-proc.png" : "") }
+    return { filename: "MSU-MR-5.png" + (proc ? "-proc.jpg" : "") }
   else
-    return { filename: "MSU-MR-RGB-221-EQU.png" + (proc ? "-proc.png" : "") }
+    return { filename: "MSU-MR-RGB-221-EQU.png" + (proc ? "-proc.jpg" : "") }
 }
 
 async function MetOp_AVHRR_Decoder(input_file, args, passData) {
@@ -113,9 +109,9 @@ async function MetOp_AVHRR_Decoder(input_file, args, passData) {
   let proc = await DenoiseAndRotate(false, passData.direction)
 
   if (thereIsLight(passData.prediction))
-    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
   else
-    return { filename: "AVHRR-4.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+    return { filename: "AVHRR-4.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
 
 }
 
@@ -134,9 +130,9 @@ async function NOAA_AVHRR_Decoder(input_file, args, passData) {
   let proc = await DenoiseAndRotate(true, passData.direction)
 
   if (thereIsLight(passData.prediction))
-    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
   else
-    return { filename: "AVHRR-4.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+    return { filename: "AVHRR-4.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
 
 
 }
