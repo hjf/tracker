@@ -1,4 +1,3 @@
-const request = require("request")
 const _ = require('lodash')
 const CELESTRAK_BASE = 'https://www.celestrak.com/NORAD/elements/'
 const axios = require('axios').default;
@@ -31,7 +30,7 @@ async function updateTLEs(force, io) {
         }
 
         let tledata = tlefiles[sat.tle_file]
-        re = new RegExp(`(.+\\n.+${sat.catalog_number}(?:U|C|S).+\\n.+\\n)`, 'gm')
+        let re = new RegExp(`(.+\\n.+${sat.catalog_number}(?:U|C|S).+\\n.+\\n)`, 'gm')
         let reres = re.exec(tledata.replaceAll("\r\n", "\n"))
         let tle = reres[0]
         logger.debug(`TLE data: ${tle}`)
