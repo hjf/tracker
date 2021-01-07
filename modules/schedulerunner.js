@@ -74,15 +74,13 @@ module.exports = class ScheduleRunner {
               fs.mkdirSync(cwd)
             } catch (err) { } 
 
-
-            logger.info(`Pass duration is ${fmtMSS(duration / 1000)}, max elevation: ${action.prediction.maxElevation}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
+            logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
             //start tracking
             logger.debug("Starting tracker")
             this.trackerController.startTracking(action.satellite, duration)
             logger.debug("Starting capture")
 
-            os.tmp
             let capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
 
             capture

@@ -7,6 +7,8 @@ const telegram = require('./telegram')
 const { spawn } = require('child_process');
 var glob = require("glob");
 const { resolve } = require('path');
+const imagemagickCli = require('imagemagick-cli');
+const e = require('cors')
 
 let cwd = ''
 
@@ -36,7 +38,7 @@ module.exports = async function pipeline(input_file, satellite, prediction, dire
         let input_file = previous_result.filename
         if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-        previous_result = await handler(input_file, step.program.args, { satellite: satellite, prediction: prediction })
+        previous_result = await handler(input_file, step.program.args, { satellite: satellite, prediction: prediction, direction: direction })
 
         console.log(previous_result)
         if (step.program.args.delete)
@@ -51,6 +53,30 @@ module.exports = async function pipeline(input_file, satellite, prediction, dire
   })
 }
 
+function thereIsLight(prediction) {
+  return prediction.sun_position_at_sat.altitude > 0 && prediction.sun_position.altitude
+}
+
+
+async function DenoiseAndRotate(denoise, passDirection) {
+
+  if (!denoise && passDirection === 'S')
+    return false
+
+  let pngs = glob.sync(path.join(cwd, '*.png'))
+  let command = ""
+
+  if (denoise) command += " -median 3 "
+
+
+  if (passDirection === 'N') command += " -rotate 180 "
+
+  let workers = pngs.map(x => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.png`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
+  await Promise.all(workers)
+  return true
+
+}
+
 async function Telegram_Post(input_file, args, passData) {
   filepath = path.join(cwd, input_file)
   logger.debug(`Posting image to telegram ${filepath}, args: ${JSON.stringify(args, null, 2)}, pass data: ${JSON.stringify(passData, null, 2)}`)
@@ -60,7 +86,7 @@ async function Telegram_Post(input_file, args, passData) {
   await telegram.postImage(filepath, caption)
 }
 
-async function METEOR_Demux(input_file, args) {
+async function METEOR_Demux(input_file, args, passData) {
   let command = "METEOR-Demux"
   let output_file = `meteor_demux_${Date.now()}`
   let pargs = [
@@ -71,46 +97,61 @@ async function METEOR_Demux(input_file, args) {
   return { filename: output_file }
 }
 
-async function METEOR_MSU_MR_Decoder(input_file, args) {
+async function METEOR_MSU_MR_Decoder(input_file, args, passData) {
   let command = "METEOR-MSU-MR-Decoder"
   let pargs = ["met-msu-mr.bin"]//always use same prefix as set in METEOR_Demux
   await GenericSpawner(command, pargs)
 
-  //TODO: RGB file should only be returned during the day
-  return { filename: "MSU-MR-RGB-221-EQU.png" }
+  let proc = DenoiseAndRotate(true, passData.direction)
+
+  if (thereIsLight(passData.prediction))
+    return { filename: "MSU-MR-5.png" + (proc ? "-proc.png" : "") }
+  else
+    return { filename: "MSU-MR-RGB-221-EQU.png" + (proc ? "-proc.png" : "") }
 }
 
-async function MetOp_AVHRR_Decoder(input_file, args) {
+async function MetOp_AVHRR_Decoder(input_file, args, passData) {
   let command = "MetOp-AVHRR-Decoder"
   let output_file = `metop_decoder_${Date.now()}.bin`
   await GenericSpawner(command, [input_file]);
   let pngs = glob.sync(path.join(cwd, '*.png'))
 
-  //TODO: RGB file should only be returned during the day
-  return { filename: "AVHRR-RGB-221-EQU.png", filenames: pngs }
+  let proc = await DenoiseAndRotate(false, passData.direction)
+
+  if (thereIsLight(passData.prediction))
+    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+  else
+    return { filename: "AVHRR-4.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+
 }
 
-async function MetOp_Decoder(input_file, args) {
+async function MetOp_Decoder(input_file, args, passData) {
   let command = "MetOp-Decoder"
   let output_file = `metop_decoder_${Date.now()}.bin`
   await GenericSpawner(command, [input_file, output_file])
   return { filename: output_file }
 }
 
-async function NOAA_AVHRR_Decoder(input_file, args) {
+async function NOAA_AVHRR_Decoder(input_file, args, passData) {
   let command = "NOAA-AVHRR-Decoder"
   await GenericSpawner(command, [input_file])
   let pngs = glob.sync(path.join(cwd, '*.png'))
 
-  //TODO: RGB file should only be returned during the day
-  return { filename: "AVHRR-RGB-221-EQU.png", filenames: pngs }
+  let proc = await DenoiseAndRotate(true, passData.direction)
+
+  if (thereIsLight(passData.prediction))
+    return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+  else
+    return { filename: "AVHRR-4.png" + (proc ? "-proc.png" : ""), filenames: pngs }
+
+
 }
 
-async function C_BPSK_Demodulator(input_file, args) {
+async function C_BPSK_Demodulator(input_file, args, passData) {
   return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset, 3000000)
 }
 
-async function QPSK_Demodulator(input_file, args) {
+async function QPSK_Demodulator(input_file, args, passData) {
   return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset, 6000000)
 }
 
