@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint"
   },
   "author": "",
   "license": "ISC",
@@ -30,5 +31,8 @@
     "tle.js": "^4.2.8",
     "winston": "^3.3.3",
     "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.17.0"
   }
 }

@@ -1,6 +1,5 @@
 global.original_cwd;
 global.original_cwd = process.cwd();
-const fs = require("fs")
 var express = require('express')
 var app = express();
 var path = require('path');

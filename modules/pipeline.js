@@ -1,18 +1,15 @@
 const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
-const os = require('os')
 const telegram = require('./telegram')
 
 const { spawn } = require('child_process');
 var glob = require("glob");
-const { resolve } = require('path');
 const imagemagickCli = require('imagemagick-cli');
-const e = require('cors')
 
 let cwd = ''
 
-handlers = {
+let handlers = {
   "C-BPSK-Demodulator": C_BPSK_Demodulator,
   "QPSK-Demodulator": QPSK_Demodulator,
   "NOAA-AVHRR-Decoder": NOAA_AVHRR_Decoder,
@@ -24,33 +21,30 @@ handlers = {
 }
 
 module.exports = async function pipeline(input_file, satellite, prediction, direction, pcwd) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      cwd = pcwd
+  // try {
+  cwd = pcwd
+  let previous_result = { filename: input_file }
 
+  for (let step of satellite.pipeline) {
+    console.log(step)
+    logger.debug(`Running pipeline step: ${step.step}`)
 
-      let previous_result = { filename: input_file }
-      for (let step of satellite.pipeline) {
-        console.log(step)
-        logger.debug(`Running pipeline step: ${step.step}`)
+    let handler = handlers[step.program.handler]
+    let input_file = previous_result.filename
+    if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-        let handler = handlers[step.program.handler]
-        let input_file = previous_result.filename
-        if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
+    previous_result = await handler(input_file, step.program.args, { satellite: satellite, prediction: prediction, direction: direction })
 
-        previous_result = await handler(input_file, step.program.args, { satellite: satellite, prediction: prediction, direction: direction })
+    console.log(previous_result)
+    if (step.program.args.delete)
+      fs.unlinkSync(path.join(pcwd, input_file))
+  }
 
-        console.log(previous_result)
-        if (step.program.args.delete)
-          fs.unlinkSync(path.join(pcwd, input_file))
-      }
-
-    }
-    catch (err) {
-      logger.error(err)
-      reject(err)
-    }
-  })
+  // }
+  // catch (err) {
+  //   logger.error(err)
+  //   return (err)
+  // }
 }
 
 function thereIsLight(prediction) {
@@ -71,14 +65,14 @@ async function DenoiseAndRotate(denoise, passDirection) {
 
   if (passDirection === 'N') command += " -rotate 180 "
 
-  let workers = pngs.map(x => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.png`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
+  let workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.png`).error(err => logger.error(`Error processing image ${filename}: ${err}`)))
   await Promise.all(workers)
   return true
 
 }
 
 async function Telegram_Post(input_file, args, passData) {
-  filepath = path.join(cwd, input_file)
+  let filepath = path.join(cwd, input_file)
   logger.debug(`Posting image to telegram ${filepath}, args: ${JSON.stringify(args, null, 2)}, pass data: ${JSON.stringify(passData, null, 2)}`)
   let caption = `${passData.satellite.name}, MEL ${passData.prediction.maxElevation.toFixed(0)}`
   logger.debug(`Posted caption will be: ${caption}`)
@@ -86,7 +80,7 @@ async function Telegram_Post(input_file, args, passData) {
   await telegram.postImage(filepath, caption)
 }
 
-async function METEOR_Demux(input_file, args, passData) {
+async function METEOR_Demux(input_file) {
   let command = "METEOR-Demux"
   let output_file = `meteor_demux_${Date.now()}`
   let pargs = [
@@ -112,7 +106,7 @@ async function METEOR_MSU_MR_Decoder(input_file, args, passData) {
 
 async function MetOp_AVHRR_Decoder(input_file, args, passData) {
   let command = "MetOp-AVHRR-Decoder"
-  let output_file = `metop_decoder_${Date.now()}.bin`
+  // let output_file = `metop_decoder_${Date.now()}.bin`
   await GenericSpawner(command, [input_file]);
   let pngs = glob.sync(path.join(cwd, '*.png'))
 
@@ -125,7 +119,7 @@ async function MetOp_AVHRR_Decoder(input_file, args, passData) {
 
 }
 
-async function MetOp_Decoder(input_file, args, passData) {
+async function MetOp_Decoder(input_file) {
   let command = "MetOp-Decoder"
   let output_file = `metop_decoder_${Date.now()}.bin`
   await GenericSpawner(command, [input_file, output_file])
@@ -147,11 +141,11 @@ async function NOAA_AVHRR_Decoder(input_file, args, passData) {
 
 }
 
-async function C_BPSK_Demodulator(input_file, args, passData) {
+async function C_BPSK_Demodulator(input_file, args) {
   return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset, 3000000)
 }
 
-async function QPSK_Demodulator(input_file, args, passData) {
+async function QPSK_Demodulator(input_file, args) {
   return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset, 6000000)
 }
 
@@ -183,7 +177,7 @@ function GenericSpawner(command, args) {
   console.log(args)
 
 
-  return new Promise(async (resolve, reject) => {
+  return new Promise( (resolve, reject) => {
     try {
       let stderr = ""
       let stdout = ""

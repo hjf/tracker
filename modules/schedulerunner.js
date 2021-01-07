@@ -24,12 +24,12 @@ module.exports = class ScheduleRunner {
 
       this.busy = true
 
-//       logger.debug("Schedule runner started")
+      //       logger.debug("Schedule runner started")
 
       const events = await db.getScheduledEventsToRun()
 
       if (events.length === 0) {
-//         setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
+        //         setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
         return false
       }
 
@@ -40,7 +40,7 @@ module.exports = class ScheduleRunner {
         logger.debug(`Processing event #${event.schedule_id}, of type ${event.schedule_type}`)
         let action = event.action
         switch (event.schedule_type) {
-          case ('satellite_pass'):
+          case ('satellite_pass'): {
             let end = new Date(action.prediction.end)
 
             //first check if the event shouldn't already been finished
@@ -70,9 +70,9 @@ module.exports = class ScheduleRunner {
             let cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
             logger.info(`Working directory: ${cwd}`)
-            try {
+
+            if (!fs.existsSync(cwd))
               fs.mkdirSync(cwd)
-            } catch (err) { } 
 
             logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
@@ -103,8 +103,10 @@ module.exports = class ScheduleRunner {
 
 
             break
-          default:
+          }
+          default: {
             this.eventNotRecognized(event)
+          }
         }
       }
 

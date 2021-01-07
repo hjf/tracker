@@ -20,9 +20,9 @@ async function generateSchedule(force) {
 
       }
     }
-    predict_start = 0
+    let predict_start = 0
     if (passes.length > 0)
-      predict_start = _.maxBy(passes, schedule_time) + 600000//delay by 10 minutes to avoid duplicates because we mess with the original start time
+      predict_start = _.maxBy(passes, 'schedule_time') + 600000//delay by 10 minutes to avoid duplicates because we mess with the original start time
 
     if (predict_start < Date.now())
       predict_start = Date.now()
