@@ -181,8 +181,8 @@ function GenericSpawner(command, args) {
       command = path.join('/usr/local/bin', command)
       this.spwaned_process = spawn(command, args, { cwd: cwd })
 
-      this.spwaned_process.stderr.on('data', (data) => { stderr += data })
-      this.spwaned_process.stdout.on('data', (data) => { stdout += data })
+      // this.spwaned_process.stderr.on('data', (data) => { stderr += data })
+      // this.spwaned_process.stdout.on('data', (data) => { stdout += data })
 
       this.spwaned_process.on('exit', (code) => {
         logger.info(`${command} ended with code ${code}.`)
