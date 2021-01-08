@@ -46,16 +46,20 @@ module.exports = class RadioController {
 
         this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd })
 
-        this.currentprocess.stderr.on('data', (data) => {
-          data = ab2str(data);
-          // logger.debug(data); 
-          stderr += data
-        })
-        this.currentprocess.stdout.on('data', (data) => {
-          data = ab2str(data);
-          // logger.debug(data);
-          stdout += data
-        })
+        this.currentprocess.stderr.on('data', () => { })
+        this.currentprocess.stdout.on('data', () => { })
+
+
+        // this.currentprocess.stderr.on('data', (data) => {
+        //   data = ab2str(data);
+        //   // logger.debug(data); 
+        //   stderr += data
+        // })
+        // this.currentprocess.stdout.on('data', (data) => {
+        //   data = ab2str(data);
+        //   // logger.debug(data);
+        //   stdout += data
+        // })
 
         this.currentprocess.on('exit', (code) => {
           logger.info(`airspy_rx ended with code ${code}.`)
