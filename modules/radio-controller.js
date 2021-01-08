@@ -41,7 +41,7 @@ module.exports = class RadioController {
           '-t', '2', //sample type 2=INT16_IQ(default)
           '-a', samplerate.toString(),
           '-r', filename,
-	  '-p', '1'
+          '-p', '1'
         ]
 
         this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd })

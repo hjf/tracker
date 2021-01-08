@@ -138,15 +138,17 @@ async function NOAA_AVHRR_Decoder(input_file, args, passData) {
 }
 
 async function C_BPSK_Demodulator(input_file, args) {
-  return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset, 3000000)
+  return Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset)
 }
 
 async function QPSK_Demodulator(input_file, args) {
-  return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset, 6000000)
+  return Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset)
 }
 
-async function Aang23DemodsBase(command, input_file, preset, sample_rate) {
-
+async function Aang23DemodsBase(command, input_file, preset) {
+  //Example filename: baseband_1610109078512_1701300_6000000.wav
+  const [fn] = input_file.split('.') //remove extension
+  const [, , , samplerate] = fn.split('_') // split by _, destructure ignoring 0, 1, 2
   logger.debug("Starting demod")
 
   let output_file = `demod_${Date.now()}.bin`
@@ -156,15 +158,12 @@ async function Aang23DemodsBase(command, input_file, preset, sample_rate) {
     '--preset', preset,
     '--input', input_file,
     '--output', output_file,
-    '-s', sample_rate
+    '-s', samplerate
   ]
-
-
 
   await GenericSpawner(command, args)
 
   return { filename: output_file }
-
 }
 
 function GenericSpawner(command, args) {
@@ -173,7 +172,7 @@ function GenericSpawner(command, args) {
   console.log(args)
 
 
-  return new Promise( (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       let stderr = ""
       let stdout = ""
