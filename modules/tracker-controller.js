@@ -40,12 +40,12 @@ module.exports = class TrackerController {
           return
 
         let status = {
-          azimuth: acp,
-          elevation: ecp,
-          target_azimuth: atp,
-          target_elevation: etp
+          azimuth: acp / 10,
+          elevation: ecp / 10,
+          target_azimuth: atp / 10,
+          target_elevation: etp / 10
         }
-        console.log(status)
+        
         if (this.io) this.io.emit('tracker', status)
       } catch (err) {
         logger.error(err)
