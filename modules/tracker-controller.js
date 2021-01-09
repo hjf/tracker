@@ -39,7 +39,7 @@ module.exports = class TrackerController {
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
-      port.write('M114', function (err) {
+      port.write('M114\n', function (err) {
         if (err) { logger.error('Serial port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
@@ -74,7 +74,7 @@ module.exports = class TrackerController {
       let el = (observation.elevation * 10).toFixed(0)
 
       this.hold = true;
-      port.write(`G01 A${az} E${el} F-1`, function (err) {
+      port.write(`G01 A${az} E${el} F-1\n`, function (err) {
         if (err) { logger.error('Serial port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
