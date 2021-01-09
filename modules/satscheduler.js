@@ -43,8 +43,8 @@ async function generateSchedule(force) {
       const predictions = getPredictions(
         sat.tle,
         location.lat, location.lon, location.alt,
-        predict_start,
-        dayjs(predict_start).add('1', 'days').valueOf(),
+        new Date(predict_start),
+        new Date(dayjs(predict_start).add('1', 'days').valueOf()),
         min_elevation,
         5
       )
