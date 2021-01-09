@@ -20,16 +20,16 @@ module.exports = class TrackerController {
       autoOpen: false
     })
 
-    this.port.open((err)=>{
+    this.port.open((err) => {
       logger.error('error opening serial port ' + err)
     })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
 
-    this.port.on('error', function (err) {
+    this.port.on('error', (err) => {
       logger.error('Serial port error: ' + err)
     })
 
-    this.parser.on('data', function (data) {
+    this.parser.on('data', (data) => {
       try {
         data = data.trim()
         // if (data === "ok")
@@ -45,7 +45,7 @@ module.exports = class TrackerController {
           target_azimuth: atp / 10,
           target_elevation: etp / 10
         }
-        
+
         if (this.io) this.io.emit('tracker', status)
       } catch (err) {
         logger.error(err)
@@ -58,7 +58,7 @@ module.exports = class TrackerController {
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
-      this.port.write('M114\n', function (err) {
+      this.port.write('M114\n', (err) => {
         if (err) { logger.error('Serial this.port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
@@ -93,7 +93,7 @@ module.exports = class TrackerController {
       let el = (observation.elevation * 10).toFixed(0)
 
       this.hold = true;
-      this.port.write(`G01 A${az} E${el} F-1\n`, function (err) {
+      this.port.write(`G01 A${az} E${el} F-1\n`, (err) => {
         if (err) { logger.error('Serial this.port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
