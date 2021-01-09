@@ -3,13 +3,10 @@ const logger = require('../logger')
 const jspredict = require('jspredict')
 // axios.defaults.timeout = 500;
 // let rotor_address = '10.42.42.115'
-const SerialPort = require('serialport')
-const Readline = require('@serialport/parser-readline')
-const port = new SerialPort('/dev/ttyUSB0', {
-  baudRate: 9600,
-  autoOpen: false
-})
-module.exports = class TrackerController {
+const Serialport = require('serialthis.port')
+const Readline = require('@serialthis.port/parser-readline')
+
+module.exthis.ports = class TrackerController {
   constructor(io, location) {
     this.io = io
     this.location = [location.lat, location.lon, location.alt / 1000]
@@ -18,17 +15,20 @@ module.exports = class TrackerController {
     //    this.startPolling()
 
     this.hold = false;
-    this.parser = port.pipe(new Readline({ delimiter: '\r\n' }))
-
-    port.on('error', function (err) {
+    this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
+    this.port = new Serialport('/dev/ttyUSB0', {
+      baudRate: 9600,
+      autoOpen: false
+    })
+    this.port.on('error', function (err) {
       logger.error('Serial port error: ' + err)
     })
 
     this.parser.on('data', function (data) {
       try {
         data = data.trim()
-        if (data === "ok")
-          return
+        // if (data === "ok")
+        //   return
         const [, , acp, , atp, , ecp, , etp] = data.split(" ");
 
         if (isNaN(acp) || isNaN(atp) || isNaN(ecp) || isNaN(etp))
@@ -53,8 +53,8 @@ module.exports = class TrackerController {
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
-      port.write('M114\n', function (err) {
-        if (err) { logger.error('Serial port error: ', err.message) }
+      this.port.write('M114\n', function (err) {
+        if (err) { logger.error('Serial this.port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
       // axios.get(`http://${rotor_address}/status`)
@@ -88,8 +88,8 @@ module.exports = class TrackerController {
       let el = (observation.elevation * 10).toFixed(0)
 
       this.hold = true;
-      port.write(`G01 A${az} E${el} F-1\n`, function (err) {
-        if (err) { logger.error('Serial port error: ', err.message) }
+      this.port.write(`G01 A${az} E${el} F-1\n`, function (err) {
+        if (err) { logger.error('Serial this.port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
       // axios.get()
