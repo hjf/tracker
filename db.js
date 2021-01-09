@@ -85,6 +85,23 @@ function getSetting(key) {
   return settings[key]
 }
 
+async function log(info) {
+  let db = await getConnection();
+
+  return await db.run('INSERT INTO logs (timestamp, level, service, message) VALUES (:timestamp , :level , :service , :message)',
+    {
+      ":timestamp": Date.now(),
+      ":level": info.level,
+      ":service": info.service,
+      ":message": info.message,
+    })
+}
+
+async function getLogs(limit = 50) {
+  let db = await getConnection();
+  return await db.all(`SELECT * FROM logs ORDER BY id DESC LIMIT 10`, { ":limit": limit })
+}
+
 module.exports = {
   getScheduledEvents: getScheduledEvents,
   changeEventStatus: changeEventStatus,
@@ -93,5 +110,7 @@ module.exports = {
   getSetting: getSetting,
   addScheduledEvent: addScheduledEvent,
   deleteScheduledEvents: deleteScheduledEvents,
-  getScheduledEventsToRun: getScheduledEventsToRun
+  getScheduledEventsToRun: getScheduledEventsToRun,
+  log: log,
+  getLogs: getLogs
 }

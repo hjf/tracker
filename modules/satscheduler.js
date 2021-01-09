@@ -17,12 +17,12 @@ async function generateSchedule(force) {
       if (force) {
         let deleted = await db.deleteScheduledEvents('satellite_pass')
         logger.info(`Passes for today already but 'force' was specified, deleting ${deleted} scheduled passes first`)
-
       }
     }
+
     let predict_start = 0
     if (passes.length > 0)
-      predict_start = _.maxBy(passes, 'schedule_time') + 600000//delay by 10 minutes to avoid duplicates because we mess with the original start time
+      predict_start = _.maxBy(passes, 'schedule_time') + 300000//delay by 5 minutes to avoid duplicates because we mess with the original start time
 
     if (predict_start < Date.now())
       predict_start = Date.now()
@@ -61,7 +61,6 @@ async function generateSchedule(force) {
           startTime += 5000;
           minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], startTime).elevation
         } while (minelev < start_end_elevation)
-        //logger.debug(`offsetting prediction start time by ${prediction.start-startTime} ms, min elev ${minelev}`)
         prediction.start = startTime
       }
 
@@ -74,19 +73,12 @@ async function generateSchedule(force) {
           endTime -= 5000;
           minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], endTime).elevation
         } while (minelev < start_end_elevation)
-        //logger.debug(`offsetting prediction start time by ${prediction.end-endTime} ms, min elev ${minelev}`)
         prediction.end = endTime
         prediction.duration = endTime - startTime
       }
 
       for (let prediction of predictions) {
-        let satpos = jspredict.observe(prediction.tle, [location.lat, location.lon, location.alt], prediction.start)
-        let sunpos = SunCalc.getPosition(prediction.start, satpos.latitude, satpos.longitude)
-        sunpos.altitude = sunpos.altitude * 180 / Math.PI;
-        sunpos.azimuth = sunpos.azimuth * 180 / Math.PI;
-        prediction.sun_position_at_sat = sunpos
         prediction.sun_position = SunCalc.getPosition(prediction.start, location.lat, location.lon)
-        delete prediction.tle
       }
 
       logger.debug(`${predictions.length} passes found.`)
@@ -102,6 +94,7 @@ async function generateSchedule(force) {
 
     }
     return true
+    
   } catch (err) {
     logger.error(err.message)
     return false
@@ -109,7 +102,7 @@ async function generateSchedule(force) {
 }
 
 function getPredictions(tle, lat, lon, alt, start, end, min_elevation, max_predictions) {
-  let transits = jspredict.transits(
+  return jspredict.transits(
     tle,
     [lat, lon, alt / 1000],
     start,
@@ -117,7 +110,6 @@ function getPredictions(tle, lat, lon, alt, start, end, min_elevation, max_predi
     min_elevation,
     max_predictions
   )
-  return transits.map(x => { return { ...x, tle: tle } })
 }
 
 module.exports = { generateSchedule }

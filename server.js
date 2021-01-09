@@ -16,14 +16,12 @@ const tleupdater = require('./modules/tleupdater');
 const satscheduler = require('./modules/satscheduler')
 const logger = require('./logger');
 const socketioTransport = require('./modules/logger-transport-socketio');
+const SQLiteTransport = require('./modules/logger-transport-sqlite');
 
 //my classes
 const ScheduleRunner = require('./modules/schedulerunner');
 const TrackerController = require('./modules/tracker-controller');
 const RadioController = require('./modules/radio-controller');
-
-
-
 
 (
   async function () {
@@ -47,10 +45,15 @@ const RadioController = require('./modules/radio-controller');
         res.json(await db.getSatellites())
       })
 
+      app.get('/getLogs', async (req, res) => {
+        res.json(await db.getLogs())
+      })
+
       http.listen(port, () => { logger.info(`Listening at http://localhost:${port}`) })
 
       //sends log to web in real time
       logger.add(new socketioTransport({ io: io, level: 'debug', 'timestamp': true }))
+      logger.add(new SQLiteTransport())
 
       const location = db.getSetting('ground_station_location')
 
