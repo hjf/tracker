@@ -24,6 +24,7 @@
     "node-telegram-bot-api": "^0.51.0",
     "png-to-jpeg": "^1.0.1",
     "request": "^2.88.2",
+    "serialport": "^9.0.4",
     "socket.io": "^3.0.4",
     "sqlite": "^4.0.19",
     "sqlite3": "^5.0.0",
