@@ -4,8 +4,10 @@ const jspredict = require('jspredict')
 // axios.defaults.timeout = 500;
 // let rotor_address = '10.42.42.115'
 const SerialPort = require('serialport')
+const Readline = require('@serialport/parser-readline')
 const port = new SerialPort('/dev/ttyUSB0', {
-  baudRate: 9600
+  baudRate: 9600,
+  autoOpen: false
 })
 module.exports = class TrackerController {
   constructor(io, location) {
@@ -13,32 +15,41 @@ module.exports = class TrackerController {
     this.location = [location.lat, location.lon, location.alt / 1000]
     this.rotor_status = { "azimuth": 0, "elevation": 0, "target_azimuth": 0, "target_elevation": 0 }
     this.satellite = null
-//    this.startPolling()
+    //    this.startPolling()
 
     this.hold = false;
-    port.on('data', function (data) {
-      logger.debug(`Receivded data ${data}`)
-return
-      if (data === "ok")
-        return
-      const [, , acp, , atp, , ecp, , etp] = data.split(" ");
+    this.parser = port.pipe(new Readline({ delimiter: '\r\n' }))
 
-      if (isNaN(acp) || isNaN(atp) || isNaN(ecp) || isNaN(etp))
-        return
+    port.on('error', function (err) {
+      logger.error('Serial port error: ' + err)
+    })
 
-      let status = {
-        azimuth: acp,
-        elevation: ecp,
-        target_azimuth: atp,
-        target_elevation: etp
+    this.parser.on('data', function (data) {
+      try {
+        data = data.trim()
+        if (data === "ok")
+          return
+        const [, , acp, , atp, , ecp, , etp] = data.split(" ");
+
+        if (isNaN(acp) || isNaN(atp) || isNaN(ecp) || isNaN(etp))
+          return
+
+        let status = {
+          azimuth: acp,
+          elevation: ecp,
+          target_azimuth: atp,
+          target_elevation: etp
+        }
+        console.log(status)
+        if (this.io) this.io.emit('tracker', status)
+      } catch (err) {
+        logger.error(err)
       }
-      console.log(status)
-      if (this.io) this.io.emit('tracker', status)
     })
   }
 
   startPolling() {
-      logger.debug(`Starting rotor polling`)
+    logger.debug(`Starting rotor polling`)
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
@@ -92,7 +103,7 @@ return
   }
 
   stopTracking() {
-      logger.debug(`Stopping rotor polling`)
+    logger.debug(`Stopping rotor polling`)
 
     clearInterval(this.intervalHandler)
     this.satellite = null
