@@ -99,7 +99,7 @@ async function log(info) {
 
 async function getLogs(limit = 50) {
   let db = await getConnection();
-  return await db.all(`SELECT * FROM logs ORDER BY id DESC LIMIT 10`, { ":limit": limit })
+  return await db.all(`SELECT * FROM logs ORDER BY id DESC LIMIT :limit`, { ":limit": limit })
 }
 
 module.exports = {
