@@ -13,10 +13,12 @@ module.exports = class TrackerController {
     this.location = [location.lat, location.lon, location.alt / 1000]
     this.rotor_status = { "azimuth": 0, "elevation": 0, "target_azimuth": 0, "target_elevation": 0 }
     this.satellite = null
-    this.startPolling()
+//    this.startPolling()
 
     this.hold = false;
     port.on('data', function (data) {
+      logger.debug(`Receivded data ${data}`)
+return
       if (data === "ok")
         return
       const [, , acp, , atp, , ecp, , etp] = data.split(" ");
@@ -36,6 +38,7 @@ module.exports = class TrackerController {
   }
 
   startPolling() {
+      logger.debug(`Starting rotor polling`)
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
@@ -89,6 +92,8 @@ module.exports = class TrackerController {
   }
 
   stopTracking() {
+      logger.debug(`Stopping rotor polling`)
+
     clearInterval(this.intervalHandler)
     this.satellite = null
   }
