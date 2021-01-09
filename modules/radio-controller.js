@@ -5,9 +5,9 @@ const { spawn } = require('child_process');
 //const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
 const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
 
-function ab2str(buf) {
-  return String.fromCharCode.apply(null, new Uint8Array(buf));
-}
+// function ab2str(buf) {
+//   return String.fromCharCode.apply(null, new Uint8Array(buf));
+// }
 
 module.exports = class RadioController {
   constructor(io) {

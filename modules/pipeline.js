@@ -48,7 +48,7 @@ module.exports = async function pipeline(input_file, satellite, prediction, dire
 }
 
 function thereIsLight(prediction) {
-  return prediction.sun_position_at_sat.altitude > 0 && prediction.sun_position.altitude
+  return prediction.sun_position.altitude > 5
 }
 
 
