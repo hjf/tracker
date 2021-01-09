@@ -80,7 +80,7 @@ async function generateSchedule(force) {
       for (let prediction of predictions) {
         prediction.sun_position = SunCalc.getPosition(prediction.start, location.lat, location.lon)
         prediction.sun_position.azimuth = prediction.sun_position.azimuth * 180 / Math.PI;
-        prediction.sun_position.elevation = prediction.sun_position.elevation * 180 / Math.PI;
+        prediction.sun_position.altitude = prediction.sun_position.altitude * 180 / Math.PI;
       }
 
       logger.debug(`${predictions.length} passes found.`)
