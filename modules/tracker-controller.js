@@ -19,6 +19,10 @@ module.exports = class TrackerController {
       baudRate: 9600,
       autoOpen: false
     })
+
+    this.port.open((err)=>{
+      logger.error('error opening serial port ' + err)
+    })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
 
     this.port.on('error', function (err) {
