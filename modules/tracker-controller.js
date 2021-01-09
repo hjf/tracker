@@ -6,7 +6,7 @@ const jspredict = require('jspredict')
 const Serialport = require('serialport')
 const Readline = require('@serialport/parser-readline')
 
-module.exthis.ports = class TrackerController {
+module.exports = class TrackerController {
   constructor(io, location) {
     this.io = io
     this.location = [location.lat, location.lon, location.alt / 1000]
@@ -15,11 +15,12 @@ module.exthis.ports = class TrackerController {
     //    this.startPolling()
 
     this.hold = false;
-    this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
     this.port = new Serialport('/dev/ttyUSB0', {
       baudRate: 9600,
       autoOpen: false
     })
+    this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
+
     this.port.on('error', function (err) {
       logger.error('Serial port error: ' + err)
     })
