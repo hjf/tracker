@@ -3,8 +3,8 @@ const logger = require('../logger')
 const jspredict = require('jspredict')
 // axios.defaults.timeout = 500;
 // let rotor_address = '10.42.42.115'
-const Serialport = require('serialthis.port')
-const Readline = require('@serialthis.port/parser-readline')
+const Serialport = require('serialport')
+const Readline = require('@serialport/parser-readline')
 
 module.exthis.ports = class TrackerController {
   constructor(io, location) {
