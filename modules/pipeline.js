@@ -92,7 +92,7 @@ async function METEOR_MSU_MR_Decoder(input_file, args, passData) {
   let pargs = ["met-msu-mr.bin"]//always use same prefix as set in METEOR_Demux
   await GenericSpawner(command, pargs)
 
-  let proc = DenoiseAndRotate(true, passData.direction)
+  let proc = await DenoiseAndRotate(true, passData.direction)
 
   if (thereIsLight(passData.prediction))
     return { filename: "MSU-MR-5.png" + (proc ? "-proc.jpg" : "") }
