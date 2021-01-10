@@ -53,7 +53,7 @@ const RadioController = require('./modules/radio-controller');
 
       //sends log to web in real time
       logger.add(new socketioTransport({ io: io, level: 'debug', 'timestamp': true }))
-      logger.add(new SQLiteTransport({}))
+      logger.add(new SQLiteTransport({level:'debug'}))
 
       const location = db.getSetting('ground_station_location')
 
