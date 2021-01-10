@@ -12,49 +12,62 @@ module.exports = class TrackerController {
     this.location = [location.lat, location.lon, location.alt / 1000]
     this.rotor_status = { "azimuth": 0, "elevation": 0, "target_azimuth": 0, "target_elevation": 0 }
     this.satellite = null
-    //    this.startPolling()
+    this.motors_powered = false
+    this.initializeSerialPort();
 
+  }
+
+  initializeSerialPort() {
     this.hold = false;
-    this.port = new Serialport('/dev/ttyUSB0', {
-      baudRate: 9600,
-      autoOpen: false
-    })
-
-    this.port.open((err) => {
-      logger.error('error opening serial port ' + err)
-    })
+    this.port = new Serialport('/dev/ttyUSB0', { baudRate: 9600, autoOpen: false })
+    this.port.on('error', (err) => { logger.error('Serial port error: ' + err) })
+    this.port.on('closed', () => { logger.error(`Serial port closed, will try reopening in 10 seconds.`); setTimeout(() => { this.initializeSerialPort(); }, 10000) })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
+    this.parser.on('data', (data) => this.processSerialPortData(data))
+    this.port.open((err) => {
+      if (!err)
+        return;
 
-    this.port.on('error', (err) => {
-      logger.error('Serial port error: ' + err)
-    })
+      logger.error(`Could not open serial port: ${err.message}. Will retry in 10 seconds.`)
+      setTimeout(this.initializeSerialPort, 10000); // next attempt to open after 10s
+    });
+  }
 
-    this.parser.on('data', (data) => {
-      try {
-        data = data.trim()
-        // if (data === "ok")
-        //   return
-        const [, , acp, , atp, , ecp, , etp] = data.split(" ");
+  processSerialPortData(data) {
+    try {
+      data = data.trim()
 
-        if (isNaN(acp) || isNaN(atp) || isNaN(ecp) || isNaN(etp))
-          return
+      const [, , currentAzimuth, , targetAzimuth, , currentElevation, , targetElevation] = data.split(" ");
 
-        let status = {
-          azimuth: acp / 10,
-          elevation: ecp / 10,
-          target_azimuth: atp / 10,
-          target_elevation: etp / 10
-        }
+      if (isNaN(currentAzimuth) || isNaN(targetAzimuth) || isNaN(currentElevation) || isNaN(targetElevation))
+        return
 
-        if (this.io) this.io.emit('tracker', status)
-      } catch (err) {
-        logger.error(err)
+      //auto poweroff
+      if (this.motors_powered && currentAzimuth === 0 && targetAzimuth === 0 && currentElevation === 0 && targetElevation === 0) {
+        this.port.write('M18\n', (err) => {
+          this.motors_powered = false
+          if (err) { logger.error('Error sending M18: ', err.message) }
+        })
       }
-    })
+
+      let status = {
+        azimuth: currentAzimuth / 10,
+        elevation: currentElevation / 10,
+        target_azimuth: targetAzimuth / 10,
+        target_elevation: targetElevation / 10,
+        satellite: this.satellite
+      }
+
+      if (this.io) this.io.emit('tracker', status)
+    } catch (err) {
+      logger.error(err)
+    }
+
   }
 
   startPolling() {
     logger.debug(`Starting rotor polling`)
+
     this.pollingHandler = setInterval(() => {
       if (this.hold) return;
       this.hold = true;
@@ -62,18 +75,11 @@ module.exports = class TrackerController {
         if (err) { logger.error('Serial this.port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
-      // axios.get(`http://${rotor_address}/status`)
-      //   .then(res => {
-      //     this.rotor_status = res.data
-      //     if (this.io) this.io.emit('tracker', this.getStatus())
-      //   })
-      //   .catch(() => {
-      //     //logger.error(err)
-      //   })
-    }, 1000);
+    }, 998);
   }
 
   startTracking(satellite, timeout) {
+    this.motors_powered = true;
     logger.info(`Starting to track satellite ${satellite.name} (${satellite.catalog_number})`)
 
     let tracker_timeout = timeout
@@ -94,7 +100,7 @@ module.exports = class TrackerController {
 
       this.hold = true;
       this.port.write(`G01 A${az} E${el} F-1\n`, (err) => {
-        if (err) { logger.error('Serial this.port error: ', err.message) }
+        if (err) { logger.error('Serial port error: ', err.message) }
       })
       setTimeout(() => { this.hold = false }, 100)
       // axios.get()
@@ -108,9 +114,14 @@ module.exports = class TrackerController {
   }
 
   stopTracking() {
-    logger.debug(`Stopping rotor polling`)
+    logger.debug(`Stopping tracking`)
 
     clearInterval(this.intervalHandler)
+    this.hold = true;
+    this.port.write(`G01 A0 E0 F-1\n`, (err) => {
+      if (err) { logger.error('Serial this.port error: ', err.message) }
+    })
+    setTimeout(() => { this.hold = false }, 100)
     this.satellite = null
   }
 
@@ -123,6 +134,7 @@ module.exports = class TrackerController {
       "target_elevation": this.rotor_status.target_elevation / 10
     }
   }
+
 
 
 }
