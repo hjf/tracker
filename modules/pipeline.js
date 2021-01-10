@@ -95,9 +95,9 @@ async function METEOR_MSU_MR_Decoder(input_file, args, passData) {
   let proc = await DenoiseAndRotate(true, passData.direction)
 
   if (thereIsLight(passData.prediction))
-    return { filename: "MSU-MR-5.png" + (proc ? "-proc.jpg" : "") }
-  else
     return { filename: "MSU-MR-RGB-221-EQU.png" + (proc ? "-proc.jpg" : "") }
+  else
+    return { filename: "MSU-MR-5.png" + (proc ? "-proc.jpg" : "") }
 }
 
 async function MetOp_AVHRR_Decoder(input_file, args, passData) {
@@ -133,7 +133,6 @@ async function NOAA_AVHRR_Decoder(input_file, args, passData) {
     return { filename: "AVHRR-RGB-221-EQU.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
   else
     return { filename: "AVHRR-4.png" + (proc ? "-proc.jpg" : ""), filenames: pngs }
-
 
 }
 
