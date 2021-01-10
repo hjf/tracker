@@ -71,8 +71,11 @@ module.exports = class ScheduleRunner {
 
             logger.info(`Working directory: ${cwd}`)
 
-            if (!fs.existsSync(cwd))
+            if (!fs.existsSync(cwd)){
               fs.mkdirSync(cwd)
+              fs.chmodSync(cwd, 777)
+            }
+
 
             logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
