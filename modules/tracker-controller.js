@@ -48,12 +48,11 @@ module.exports = class TrackerController {
       targetElevation /= 10;
 
       //auto poweroff
-      if (!this.hold &&
-        this.motors_powered &&
-        currentAzimuth === 0 &&
-        targetAzimuth === 0 &&
-        currentElevation === 0 &&
-        targetElevation === 0) {
+      if (this.motors_powered &&
+        currentAzimuth == 0 &&
+        targetAzimuth == 0 &&
+        currentElevation == 0 &&
+        targetElevation == 0) {
         this.hold = true;
         this.port.write('M18\n', (err) => {
           this.motors_powered = false
