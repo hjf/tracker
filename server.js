@@ -22,8 +22,6 @@ const SQLiteTransport = require('./modules/logger-transport-sqlite');
 const ScheduleRunner = require('./modules/schedulerunner');
 const TrackerController = require('./modules/tracker-controller');
 const RadioController = require('./modules/radio-controller');
-const { of } = require('core-js/fn/array');
-const e = require('cors');
 
 (
   async function () {
