@@ -140,14 +140,19 @@ module.exports = class TrackerController {
   park() {
     logger.debug(`parking rotor`)
 
-    if (this.hold || this.satellite)
-      return false
+    if (this.hold)
+      return "serial port busy, retry"
+
+    if (this.satellite)
+      return `Currently tracking ${this.satellite.name}`
 
     this.hold = true;
     this.port.write(`G01 A0 E0 F-1\n`, (err) => {
       if (err) { logger.error('Serial this.port error: ', err.message) }
     })
     setTimeout(() => { this.hold = false }, 100)
+
+    return "OK"
 
   }
 
