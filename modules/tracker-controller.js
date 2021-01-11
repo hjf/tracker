@@ -54,10 +54,12 @@ module.exports = class TrackerController {
         targetAzimuth === 0 &&
         currentElevation === 0 &&
         targetElevation === 0) {
+        this.hold = true;
         this.port.write('M18\n', (err) => {
           this.motors_powered = false
           if (err) { logger.error('Error sending M18: ', err.message) }
         })
+        setTimeout(() => { this.hold = false }, 100)
       }
 
       let status = {
@@ -133,6 +135,20 @@ module.exports = class TrackerController {
     })
     setTimeout(() => { this.hold = false }, 100)
     this.satellite = null
+  }
+
+  park() {
+    logger.debug(`parking rotor`)
+
+    if (this.hold || this.satellite)
+      return false
+
+    this.hold = true;
+    this.port.write(`G01 A0 E0 F-1\n`, (err) => {
+      if (err) { logger.error('Serial this.port error: ', err.message) }
+    })
+    setTimeout(() => { this.hold = false }, 100)
+
   }
 
   getStatus() {

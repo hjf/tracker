@@ -22,6 +22,8 @@ const SQLiteTransport = require('./modules/logger-transport-sqlite');
 const ScheduleRunner = require('./modules/schedulerunner');
 const TrackerController = require('./modules/tracker-controller');
 const RadioController = require('./modules/radio-controller');
+const { of } = require('core-js/fn/array');
+const e = require('cors');
 
 (
   async function () {
@@ -49,11 +51,13 @@ const RadioController = require('./modules/radio-controller');
         res.json(await db.getLogs())
       })
 
+
+
       http.listen(port, () => { logger.info(`Listening at http://localhost:${port}`) })
 
       //sends log to web in real time
       logger.add(new socketioTransport({ io: io, level: 'debug', 'timestamp': true }))
-      logger.add(new SQLiteTransport({level:'debug'}))
+      logger.add(new SQLiteTransport({ level: 'debug' }))
 
       const location = db.getSetting('ground_station_location')
 
@@ -77,6 +81,14 @@ const RadioController = require('./modules/radio-controller');
         satscheduler.generateSchedule();
 
       }, 21600000);
+
+
+      app.get('/park', async (req, res) => {
+        if (trackerController.park())
+          res.json({ result: 'ok' })
+        else
+          res.json({ error: 'could not park' })
+      })
     }
 
     catch (err) {
