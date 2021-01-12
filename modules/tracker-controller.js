@@ -37,7 +37,7 @@ module.exports = class TrackerController {
     try {
       data = data.trim()
 
-      let [, , currentAzimuth, , targetAzimuth, , currentElevation, , targetElevation] = data.split(" ");
+      let [, , currentAzimuth, , targetAzimuth, , currentElevation, , targetElevation,, driversPower] = data.split(" ");
 
       if (isNaN(currentAzimuth) || isNaN(targetAzimuth) || isNaN(currentElevation) || isNaN(targetElevation))
         return
@@ -47,25 +47,12 @@ module.exports = class TrackerController {
       targetAzimuth /= 10;
       targetElevation /= 10;
 
-      //auto poweroff
-      if (this.motors_powered &&
-        currentAzimuth == 0 &&
-        targetAzimuth == 0 &&
-        currentElevation == 0 &&
-        targetElevation == 0) {
-        this.hold = true;
-        this.port.write('M18\n', (err) => {
-          this.motors_powered = false
-          if (err) { logger.error('Error sending M18: ', err.message) }
-        })
-        setTimeout(() => { this.hold = false }, 100)
-      }
-
       let status = {
         azimuth: currentAzimuth,
         elevation: currentElevation,
         target_azimuth: targetAzimuth,
         target_elevation: targetElevation,
+        drivers_power: driversPower,
         satellite: this.satellite
       }
 
