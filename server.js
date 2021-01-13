@@ -41,6 +41,14 @@ const RadioController = require('./modules/radio-controller');
         res.json(await db.getScheduledEvents('satellite_pass'))
       })
 
+      app.get('/setPassStatus', async (req, res) => {
+        const schedule_id = req.query.id;
+        const run_status = req.query.run_status;
+
+        const dbres = await db.changeEventStatus(schedule_id, run_status, { status: "changed by user" })
+        res.json({ dbres: dbres })
+      })
+
       app.get('/getSatellites', async (req, res) => {
         res.json(await db.getSatellites())
       })

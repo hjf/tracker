@@ -20,8 +20,8 @@ async function getScheduledEvents(schedule_type) {
   let db = await getConnection();
   let rv = []
   if (schedule_type)
-    rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND schedule_type= :schedule_type AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now, ":schedule_type": schedule_type })
-  rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND run_status = 'scheduled' ORDER BY schedule_time ASC`, { ":schedule_time": now })
+    rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time AND schedule_type= :schedule_type AND (run_status = 'scheduled' OR run_status='disabled') ORDER BY schedule_time ASC`, { ":schedule_time": now, ":schedule_type": schedule_type })
+  rv = await db.all(`SELECT * FROM schedule WHERE schedule_time > :schedule_time  AND (run_status = 'scheduled' OR run_status='disabled') ORDER BY schedule_time ASC`, { ":schedule_time": now })
 
   return rv.map(x => { x.action = JSON.parse(x.action); return x })
 }
