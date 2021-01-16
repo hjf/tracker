@@ -90,7 +90,13 @@ const RadioController = require('./modules/radio-controller');
 
 
       app.get('/park', async (req, res) => {
-        res.json({ result: trackerController.park() })
+        trackerController.park()
+          .then(() => {
+            res.json({ result: 'ok' })
+          })
+          .catch((err) => {
+            res.status(500).send(err)
+          })
       })
     }
 
