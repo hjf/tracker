@@ -27,6 +27,7 @@ module.exports = class TrackerController {
         }, 100)
 
         this.responseHandler = (res) => {
+          if (!to || to._destroyed) return
           clearTimeout(to)
           sem.leave()
           resolve(res)
@@ -34,8 +35,9 @@ module.exports = class TrackerController {
 
         this.port.write(message.trim() + '\n', (err) => {
           if (err) {
+            if (to && to._destroyed === false)
+              clearTimeout(to)
             logger.error('Serial this.port error: ', err.message)
-            clearTimeout(to)
             sem.leave();
             reject(err)
           }
