@@ -21,12 +21,21 @@ module.exports = class TrackerController {
   serialWrite(message) {
     return new Promise((resolve, reject) => {
       sem.take(() => {
-        this.responseHandler = (res) => { sem.leave(); resolve(res) }
-        this.setTimeout(() => { sem.leave(); reject('timeout') }, 100)
+        let to = setTimeout(() => {
+          sem.leave();
+          reject('timeout')
+        }, 100)
+
+        this.responseHandler = (res) => {
+          clearTimeout(to)
+          sem.leave()
+          resolve(res)
+        }
 
         this.port.write(message.trim() + '\n', (err) => {
           if (err) {
             logger.error('Serial this.port error: ', err.message)
+            clearTimeout(to)
             sem.leave();
             reject(err)
           }
