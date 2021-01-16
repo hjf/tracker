@@ -49,7 +49,7 @@ module.exports = class TrackerController {
     this.port.on('error', (err) => { logger.error('Serial port error: ' + err) })
     this.port.on('closed', () => { logger.error(`Serial port closed, will try reopening in 10 seconds.`); setTimeout(() => { this.initializeSerialPort(); }, 10000) })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
-    this.parser.on('data', (data) => this.processSerialPortData(data))
+    this.parser.on('data', this.processSerialPortData)
     this.port.open((err) => {
       if (!err)
         return;
@@ -66,7 +66,8 @@ module.exports = class TrackerController {
         this.responseHandler = null
       }
       else
-        logger.warn('Data arrived on serial port, but there was no handler')
+        //if(data.trim()!=='ok')  because firmware error that returns ok twice
+        if (data.trim() !== 'ok') logger.warn('Data arrived on serial port, but there was no handler')
 
     } catch (err) {
       logger.error(err)
@@ -150,11 +151,13 @@ module.exports = class TrackerController {
     return new Promise((resolve, reject) => {
       logger.debug(`parking rotor`)
 
-      reject(`Currently tracking ${this.satellite.name}`)
-
-      this.serialWrite(`G01 A0 E0 F-1`)
-        .then(() => { resolve("OK") })
-        .catch((err) => { reject(err) })
+      if (this.satellite) {
+        reject(`Currently tracking ${this.satellite.name}`)
+      } else {
+        this.serialWrite(`G01 A0 E0 F-1`)
+          .then(() => { resolve("OK") })
+          .catch(reject)
+      }
     })
   }
 
