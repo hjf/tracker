@@ -49,7 +49,7 @@ module.exports = class TrackerController {
     this.port.on('error', (err) => { logger.error('Serial port error: ' + err) })
     this.port.on('closed', () => { logger.error(`Serial port closed, will try reopening in 10 seconds.`); setTimeout(() => { this.initializeSerialPort(); }, 10000) })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
-    this.parser.on('data', this.processSerialPortData)
+    this.parser.on('data', (data) => this.processSerialPortData(data))
     this.port.open((err) => {
       if (!err)
         return;
