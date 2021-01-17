@@ -44,10 +44,10 @@ module.exports = class RadioController {
           '-p', '1'
         ]
 
-        this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd })
+        this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
 
-        this.currentprocess.stderr.on('data', () => { })
-        this.currentprocess.stdout.on('data', () => { })
+        // this.currentprocess.stderr.on('data', () => { })
+        // this.currentprocess.stdout.on('data', () => { })
 
 
         // this.currentprocess.stderr.on('data', (data) => {

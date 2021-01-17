@@ -204,10 +204,10 @@ function GenericSpawner(command, args, rundir='/usr/local/bin') {
 
       //      command = path.join(global.original_cwd, 'modules', 'decoders', command + '.exe')
       command = path.join(rundir, command)
-      this.spwaned_process = spawn(command, args, { cwd: cwd })
+      this.spwaned_process = spawn(command, args, { cwd: cwd, stdio: 'ignore', detached: true })
 
-      this.spwaned_process.stderr.on('data', () => { })
-      this.spwaned_process.stdout.on('data', () => { })
+      // this.spwaned_process.stderr.on('data', () => { })
+      // this.spwaned_process.stdout.on('data', () => { })
 
       this.spwaned_process.on('exit', (code) => {
         logger.info(`${command} ended with code ${code}.`)
