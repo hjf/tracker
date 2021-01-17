@@ -13,9 +13,10 @@ module.exports = class TrackerController {
     this.location = [location.lat, location.lon, location.alt / 1000]
     this.rotor_status = { "azimuth": 0, "elevation": 0, "target_azimuth": 0, "target_elevation": 0 }
     this.satellite = null
-    this.motors_powered = false
+    this.drivers_power = "unknown"
     this.initializeSerialPort();
     this.responseHandler = null
+    this.last_poll = 0
   }
 
   serialWrite(message) {
@@ -88,10 +89,14 @@ module.exports = class TrackerController {
         if (isNaN(currentAzimuth) || isNaN(targetAzimuth) || isNaN(currentElevation) || isNaN(targetElevation))
           return
 
+        this.last_poll = Date.now()
+
         currentAzimuth /= 10;
         currentElevation /= 10;
         targetAzimuth /= 10;
         targetElevation /= 10;
+
+        this.drivers_power = driversPower
 
         let status = {
           azimuth: currentAzimuth,
@@ -99,7 +104,8 @@ module.exports = class TrackerController {
           target_azimuth: targetAzimuth,
           target_elevation: targetElevation,
           drivers_power: driversPower,
-          satellite: this.satellite
+          satellite: this.satellite,
+          last_poll: this.last_poll
         }
 
         this.io.emit('tracker', status)
@@ -109,11 +115,10 @@ module.exports = class TrackerController {
 
     this.pollingHandler = setInterval(() => {
       this.serialWrite('M114').then(handleM114).catch(logger.error)
-    }, 998);
+    }, 5000);
   }
 
   startTracking(satellite, timeout) {
-    this.motors_powered = true;
     logger.info(`Starting to track satellite ${satellite.name} (${satellite.catalog_number})`)
 
     let tracker_timeout = timeout
@@ -169,7 +174,10 @@ module.exports = class TrackerController {
       "azimuth": this.rotor_status.azimuth / 10,
       "elevation": this.rotor_status.elevation / 10,
       "target_azimuth": this.rotor_status.target_azimuth / 10,
-      "target_elevation": this.rotor_status.target_elevation / 10
+      "target_elevation": this.rotor_status.target_elevation / 10,
+      "last_poll": this.last_poll,
+      "drivers_power": this.drivers_power,
+
     }
   }
 }
