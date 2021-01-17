@@ -25,7 +25,7 @@ module.exports = class TrackerController {
         let to = setTimeout(() => {
           sem.leave();
           reject('timeout')
-        }, 100)
+        }, 3000)
 
         this.responseHandler = (res) => {
           if (!to || to._destroyed) return
