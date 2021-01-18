@@ -64,7 +64,7 @@ module.exports = class RadioController {
 
         this.currentprocess.on('exit', (code) => {
           try {
-            exec(AIRSPY_GPIO_EXECUTABLE + " -p 0 -n 13")
+            exec(AIRSPY_GPIO_EXECUTABLE + " -p 1 -n 13 -w 0 ")
           } catch (err) {
             logger.error(err)
           }
