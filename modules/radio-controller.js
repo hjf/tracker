@@ -1,9 +1,10 @@
 const logger = require('../logger')
 const path = require('path')
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 
 //const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
 const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
+const AIRSPY_GPIO_EXECUTABLE = '/usr/bin/airspy_gpio'
 
 // function ab2str(buf) {
 //   return String.fromCharCode.apply(null, new Uint8Array(buf));
@@ -62,6 +63,12 @@ module.exports = class RadioController {
         // })
 
         this.currentprocess.on('exit', (code) => {
+          try {
+            exec(AIRSPY_GPIO_EXECUTABLE + " -p 0 -n 13")
+          } catch (err) {
+            logger.error(err)
+          }
+
           logger.info(`airspy_rx ended with code ${code}.`)
           resolve({ filename: filename, stdout: stdout, stderr: stderr })//, stdout: stdout, stderr: stderr })
         })
