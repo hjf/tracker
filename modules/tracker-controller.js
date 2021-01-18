@@ -131,11 +131,11 @@ module.exports = class TrackerController {
 
     this.intervalHandler = setInterval(() => {
       let observation = jspredict.observe(satellite.tle, this.location)
-      let el = (observation.elevation * 10)
-      let az = (observation.azimuth * 10)
+      let el = observation.elevation
+      let az = observation.azimuth
 
       if (az === 0)
-        az = 1;//never allow it to be 0. at least 0.1 degree, see explanation below
+        az = 0.1;//never allow it to be 0. at least 0.1 degree, see explanation below
 
       //this allows the rotor to go from, say, 1.2 degrees to 359.9 degrees
       // by offsetting the reading by 360. 359.9->1.2 becomes 359.9->(360+1.2) = 361.2
@@ -151,8 +151,8 @@ module.exports = class TrackerController {
       //save the real value of az
       this.last_azimuth = az
 
-      el = el.toFixed(0)
-      az = (az + this.azimuth_offset).toFixed(0)
+      el = (el * 10).toFixed(0)
+      az = ((az + this.azimuth_offset) * 10).toFixed(0)
 
       this.serialWrite(`G01 A${az} E${el} F-1`)
         .then(() => { })
