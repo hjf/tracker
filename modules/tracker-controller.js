@@ -1,8 +1,5 @@
-// const axios = require('axios')
 const logger = require('../logger')
 const jspredict = require('jspredict')
-// axios.defaults.timeout = 500;
-// let rotor_address = '10.42.42.115'
 const Serialport = require('serialport')
 const Readline = require('@serialport/parser-readline')
 const sem = require('semaphore')(1);
@@ -17,6 +14,8 @@ module.exports = class TrackerController {
     this.initializeSerialPort();
     this.responseHandler = null
     this.last_poll = 0
+    this.last_azimuth = 0
+    this.azimuth_offset = 0
   }
 
   serialWrite(message) {
@@ -132,9 +131,28 @@ module.exports = class TrackerController {
 
     this.intervalHandler = setInterval(() => {
       let observation = jspredict.observe(satellite.tle, this.location)
-      let az = (observation.azimuth * 10).toFixed(0)
-      let el = (observation.elevation * 10).toFixed(0)
+      let el = (observation.elevation * 10)
+      let az = (observation.azimuth * 10)
 
+      if (az === 0)
+        az = 1;//never allow it to be 0. at least 0.1 degree, see explanation below
+
+      //this allows the rotor to go from, say, 1.2 degrees to 359.9 degrees
+      // by offsetting the reading by 360. 359.9->1.2 becomes 359.9->(360+1.2) = 361.2
+      if (this.azimuth_offset === 0 && az < 10 && this.last_azimuth > 350)
+        this.azimuth_offset = 360
+
+      //and this does the opposite, a jump from 1.2 to 359.9 becomes 1.2->359.9-360=>-0.1
+      //this adds an extra check that last_azimuth should never be 0 (parked position)
+      //because it would always take the "short route" and may get tangled with the antenna wires
+      else if (this.azimuth_offset === 0 && az > 350 && this.last_azimuth < 10 && this.last_azimuth != 0)
+        this.azimuth_offset = -360
+
+      //save the real value of az
+      this.last_azimuth = az
+
+      el = el.toFixed(0)
+      az = (az + this.azimuth_offset).toFixed(0)
 
       this.serialWrite(`G01 A${az} E${el} F-1`)
         .then(() => { })
@@ -149,6 +167,9 @@ module.exports = class TrackerController {
     logger.debug(`Stopping tracking`)
 
     clearInterval(this.intervalHandler)
+    this.last_azimuth = 0
+    this.azimuth_offset = 0
+
     this.satellite = null
     this.park()
 
