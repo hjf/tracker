@@ -29,7 +29,7 @@ module.exports = class Pipeline {
       "Telegram-Post": this.Telegram_Post
     }
     for (let handler of this.handlers)
-      handler.bind(this)
+      handler = handler.bind(this)
   }
 
   async run() {
