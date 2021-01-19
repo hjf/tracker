@@ -11,12 +11,13 @@ const imagemagickCli = require('imagemagick-cli');
 
 module.exports = class Pipeline {
 
-  constructor(baseband_file, satellite, prediction, direction, cwd) {
+  constructor(baseband_file, satellite, prediction, direction, cwd, schedule_id) {
     this.baseband_file = baseband_file;
     this.satellite = satellite;
     this.prediction = prediction;
     this.direction = direction;
     this.cwd = cwd;
+    this.schedule_id=schedule_id;
     this.handlers = {
       "C-BPSK-Demodulator": this.C_BPSK_Demodulator,
       "QPSK-Demodulator": this.QPSK_Demodulator,
@@ -34,7 +35,7 @@ module.exports = class Pipeline {
     let previous_result = { filename: this.baseband_file }
 
     for (let step of this.satellite.pipeline) {
-      logger.debug(`Running pipeline step: ${step.step}`)
+      logger.debug(`[${this.schedule_id}] Running pipeline step: ${step.step}`)
 
       let handler = this.handlers[step.program.handler];
       let input_file = previous_result.filename
