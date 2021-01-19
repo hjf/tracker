@@ -1,6 +1,6 @@
 const logger = require('../logger')
 const db = require('../db.js');
-const pipeline = require('./pipeline');
+const Pipeline = require('./pipeline');
 const os = require('os');
 const fs = require('fs');
 const path = require('path')
@@ -71,9 +71,9 @@ module.exports = class ScheduleRunner {
 
             logger.info(`Working directory: ${cwd}`)
 
-            if (!fs.existsSync(cwd)){
+            if (!fs.existsSync(cwd)) {
               fs.mkdirSync(cwd)
-              fs.chmodSync(cwd, 777)
+              
             }
 
 
@@ -91,7 +91,8 @@ module.exports = class ScheduleRunner {
                 let baseband_file = res.filename
                 logger.info("starting pipeline")
                 try {
-                  await pipeline(baseband_file, action.satellite, action.prediction, direction, cwd)
+                  let pipeline = new Pipeline(baseband_file, action.satellite, action.prediction, direction, cwd)
+                  await pipeline.run()
                 } catch (err) {
                   console.error(err)
                 }
