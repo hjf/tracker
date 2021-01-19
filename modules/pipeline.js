@@ -19,17 +19,15 @@ module.exports = class Pipeline {
     this.cwd = cwd;
     this.schedule_id = schedule_id;
     this.handlers = {
-      "C-BPSK-Demodulator": this.C_BPSK_Demodulator,
-      "QPSK-Demodulator": this.QPSK_Demodulator,
-      "NOAA-AVHRR-Decoder": this.NOAA_AVHRR_Decoder,
-      "MetOp-Decoder": this.MetOp_Decoder,
-      "MetOp-AVHRR-Decoder": this.MetOp_AVHRR_Decoder,
-      "METEOR-Demux": this.METEOR_Demux,
-      "METEOR-MSU-MR-Decoder": this.METEOR_MSU_MR_Decoder,
-      "Telegram-Post": this.Telegram_Post
+      "C-BPSK-Demodulator": this.C_BPSK_Demodulator.bind(this),
+      "QPSK-Demodulator": this.QPSK_Demodulator.bind(this),
+      "NOAA-AVHRR-Decoder": this.NOAA_AVHRR_Decoder.bind(this),
+      "MetOp-Decoder": this.MetOp_Decoder.bind(this),
+      "MetOp-AVHRR-Decoder": this.MetOp_AVHRR_Decoder.bind(this),
+      "METEOR-Demux": this.METEOR_Demux.bind(this),
+      "METEOR-MSU-MR-Decoder": this.METEOR_MSU_MR_Decoder.bind(this),
+      "Telegram-Post": this.Telegram_Post.bind(this)
     }
-    for (let handler of this.handlers)
-      handler = handler.bind(this)
   }
 
   async run() {
