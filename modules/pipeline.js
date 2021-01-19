@@ -42,6 +42,7 @@ module.exports = class Pipeline {
 
       if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
+      handler.bind(this)
       previous_result = await handler(input_file, step.program.args)
 
       console.log(previous_result)
