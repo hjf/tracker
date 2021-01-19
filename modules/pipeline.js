@@ -17,7 +17,7 @@ module.exports = class Pipeline {
     this.prediction = prediction;
     this.direction = direction;
     this.cwd = cwd;
-    this.schedule_id=schedule_id;
+    this.schedule_id = schedule_id;
     this.handlers = {
       "C-BPSK-Demodulator": this.C_BPSK_Demodulator,
       "QPSK-Demodulator": this.QPSK_Demodulator,
@@ -28,6 +28,8 @@ module.exports = class Pipeline {
       "METEOR-MSU-MR-Decoder": this.METEOR_MSU_MR_Decoder,
       "Telegram-Post": this.Telegram_Post
     }
+    for (let handler of this.handlers)
+      handler.bind(this)
   }
 
   async run() {
@@ -42,7 +44,6 @@ module.exports = class Pipeline {
 
       if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-      handler.bind(this)
       previous_result = await handler(input_file, step.program.args)
 
       console.log(previous_result)
