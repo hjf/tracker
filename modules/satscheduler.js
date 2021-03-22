@@ -44,7 +44,7 @@ async function generateSchedule(force) {
         sat.tle,
         location.lat, location.lon, location.alt,
         new Date(predict_start),
-        new Date(dayjs(predict_start).add('1', 'days').valueOf()),
+        new Date(dayjs(predict_start).add('7', 'days').valueOf()),
         min_elevation,
         5
       )
