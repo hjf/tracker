@@ -47,7 +47,7 @@ module.exports = class TrackerController {
   }
 
   initializeSerialPort() {
-    this.port = new Serialport('/dev/ttyUSB0', { baudRate: 9600, autoOpen: false })
+    this.port = new Serialport('/dev/ttyUSB0', { baudRate: 115200, autoOpen: false })
     this.port.on('error', (err) => { logger.error('Serial port error: ' + err) })
     this.port.on('closed', () => { logger.error(`Serial port closed, will try reopening in 10 seconds.`); setTimeout(() => { this.initializeSerialPort(); }, 10000) })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
