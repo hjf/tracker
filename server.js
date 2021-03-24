@@ -101,7 +101,7 @@ const RadioController = require('./modules/radio-controller');
     }
 
     catch (err) {
-      console.error(err)
+      logger.error(err)
       process.exit()
     }
   }());

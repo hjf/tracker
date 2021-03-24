@@ -94,7 +94,7 @@ module.exports = class ScheduleRunner {
                   let pipeline = new Pipeline(baseband_file, action.satellite, action.prediction, direction, cwd, event.schedule_id)
                   await pipeline.run()
                 } catch (err) {
-                  console.error(err)
+                  logger.error(err)
                 }
 
                 logger.info(`Event #${event.schedule_id} ended successfully.`)

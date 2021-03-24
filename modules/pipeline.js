@@ -44,7 +44,7 @@ module.exports = class Pipeline {
 
       previous_result = await handler(input_file, step.program.args)
 
-      console.log(previous_result)
+      logger.debug(previous_result)
       if (step.program.args.delete)
         fs.unlinkSync(path.join(this.cwd, input_file))
     }
@@ -154,7 +154,7 @@ module.exports = class Pipeline {
 
   async Aang23DemodsBase(command, input_file, preset, singlecore = false) {
 
-    mkfifoSync(input_file + 'fifo',438); //438=0666
+    mkfifoSync(input_file + 'fifo', 438); //438=0666
 
     logger.debug(`/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`)
 
@@ -212,9 +212,10 @@ module.exports = class Pipeline {
 
   GenericSpawner(command, args, rundir = '/usr/local/bin') {
 
-    console.log(command)
-    console.log(args)
-if(command==='/bin/sh') rundir=''
+    logger.debug(command)
+    logger.debug(args)
+
+    if (command === '/bin/sh') rundir = ''
 
     return new Promise((resolve, reject) => {
       try {
