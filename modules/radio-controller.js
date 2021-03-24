@@ -30,7 +30,7 @@ module.exports = class RadioController {
         let nsamples = (samplerate * (duration_ms / 1000)).toFixed(0).toString() //samplerate x duration = n of samples to capture
         logger.debug(`Will capture ${nsamples} samples`)
 
-        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}`
+        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
         filename = path.join(filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
@@ -45,7 +45,7 @@ module.exports = class RadioController {
           '-r', '-',
           '-p', '1',
           '|',
-          'zstd', '-o', filename+'.zst'
+          'zstd', '-o', filename
         ]
 
         let rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
