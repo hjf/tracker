@@ -156,6 +156,8 @@ module.exports = class Pipeline {
 
     mkfifoSync(input_file + 'fifo',438); //438=0666
 
+    logger.debug(`/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`)
+
     let zargs = ['-c', `/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`]
 
     this.GenericSpawner('/bin/sh', zargs)
