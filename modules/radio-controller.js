@@ -30,7 +30,7 @@ module.exports = class RadioController {
         let nsamples = (samplerate * (duration_ms / 1000)).toFixed(0).toString() //samplerate x duration = n of samples to capture
         logger.debug(`Will capture ${nsamples} samples`)
 
-        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
+        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}`
         filename = path.join(filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
