@@ -46,7 +46,7 @@ async function generateSchedule(force) {
         new Date(predict_start),
         new Date(dayjs(predict_start).add('7', 'days').valueOf()),
         min_elevation,
-        5
+        50
       )
 
       const start_end_elevation = db.getSetting('start_end_elevation') || 5
