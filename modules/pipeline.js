@@ -49,6 +49,9 @@ module.exports = class Pipeline {
         fs.unlinkSync(path.join(this.cwd, input_file))
     }
 
+    fs.rmdir(this.cwd, { recursive: true })
+
+
   }
 
   thereIsLight() {
@@ -154,7 +157,7 @@ module.exports = class Pipeline {
 
   async Aang23DemodsBase(command, input_file, preset, singlecore = false) {
 
-    mkfifoSync(path.join(this.cwd,input_file) + 'fifo', 438); //438=0666
+    mkfifoSync(path.join(this.cwd, input_file) + 'fifo', 438); //438=0666
 
     logger.debug(`/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`)
 
