@@ -49,13 +49,13 @@ module.exports = class Pipeline {
         fs.unlinkSync(path.join(this.cwd, input_file))
     }
 
-    fs.rmdir(this.cwd, { recursive: true })
+    fs.rmdirSync(this.cwd, { recursive: true })
 
 
   }
 
   thereIsLight() {
-    return this.prediction.sun_position.altitude > 5
+    return this.prediction.sun_position.altitude > 0
   }
 
 
