@@ -7,8 +7,6 @@ const { spawn } = require('child_process');
 var glob = require("glob");
 const imagemagickCli = require('imagemagick-cli');
 
-
-
 module.exports = class Pipeline {
 
   constructor(baseband_file, satellite, prediction, direction, cwd, schedule_id) {
@@ -31,33 +29,31 @@ module.exports = class Pipeline {
   }
 
   async run() {
-    // try {
-    let previous_result = { filename: this.baseband_file }
+    try {
+      let previous_result = { filename: this.baseband_file }
 
-    for (let step of this.satellite.pipeline) {
-      logger.debug(`[${this.schedule_id}] Running pipeline step: ${step.step}`)
+      for (let step of this.satellite.pipeline) {
+        logger.debug(`[${this.schedule_id}] Running pipeline step: ${step.step}`)
 
-      let handler = this.handlers[step.program.handler];
-      let input_file = previous_result.filename
+        let handler = this.handlers[step.program.handler];
+        let input_file = previous_result.filename
 
-      if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
+        if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-      previous_result = await handler(input_file, step.program.args)
+        previous_result = await handler(input_file, step.program.args)
 
-      logger.debug(previous_result)
-      if (step.program.args.delete)
-        fs.unlinkSync(path.join(this.cwd, input_file))
+        logger.debug(previous_result)
+        if (step.program.args.delete)
+          fs.unlinkSync(path.join(this.cwd, input_file))
+      }
+    } finally {
+      fs.rmdirSync(this.cwd, { recursive: true })
     }
-
-    fs.rmdirSync(this.cwd, { recursive: true })
-
-
   }
 
   thereIsLight() {
     return this.prediction.sun_position.altitude > 0
   }
-
 
   async DenoiseAndRotate(denoise) {
 
