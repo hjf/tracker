@@ -1,20 +1,20 @@
-const Transport = require('winston-transport');
-const winston = require('winston');
+const Transport = require('winston-transport')
+const winston = require('winston')
 const db = require('../db')
 //
 // Inherit from `winston-transport` so you can take advantage
 // of the base functionality and `.exceptions.handle()`.
 //
 module.exports = class SQLiteTransport extends Transport {
-  constructor(opts) {
+  constructor (opts) {
     opts.format = winston.format.json()
-    super(opts);
+    super(opts)
   }
 
-  log(info, callback) {
+  log (info, callback) {
     setImmediate(() => {
-      this.emit('logged', info);
-    });
+      this.emit('logged', info)
+    })
 
     try {
       db.log(info)
@@ -22,7 +22,6 @@ module.exports = class SQLiteTransport extends Transport {
       console.error(err)
     }
 
-    callback();
+    callback()
   }
-
-};
+}

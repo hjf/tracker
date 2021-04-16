@@ -1,26 +1,24 @@
 const logger = require('../logger')
-const db = require('../db.js');
-const Pipeline = require('./pipeline');
-const os = require('os');
-const fs = require('fs');
+const db = require('../db.js')
+const Pipeline = require('./pipeline')
+const os = require('os')
+const fs = require('fs')
 const path = require('path')
-//https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
-function fmtMSS(s) { return (s - (s %= 60)) / 60 + (9 < s ? ':' : ':0') + s }
-
+// https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
+function fmtMSS (s) { return (s - (s %= 60)) / 60 + (s > 9 ? ':' : ':0') + s }
 
 module.exports = class ScheduleRunner {
-  constructor(io, location, trackerController, radioController) {
-    this.io = io;
-    this.location = location;
-    this.trackerController = trackerController;
-    this.radioController = radioController;
+  constructor (io, location, trackerController, radioController) {
+    this.io = io
+    this.location = location
+    this.trackerController = trackerController
+    this.radioController = radioController
     this.busy = false
   }
 
-  async processEvents() {
-
+  async processEvents () {
     try {
-      if (this.busy) throw new Error(`Event processor was called while the previous run wasn't finished.`)
+      if (this.busy) throw new Error('Event processor was called while the previous run wasn\'t finished.')
 
       this.busy = true
 
@@ -35,63 +33,60 @@ module.exports = class ScheduleRunner {
 
       logger.debug(`Starting to process ${events.length} event${events.length === 1 ? '.' : 's.'}`)
 
-
-      for (let event of events) {
+      for (const event of events) {
         logger.debug(`Processing event #${event.schedule_id}, of type ${event.schedule_type}`)
-        let action = event.action
+        const action = event.action
         switch (event.schedule_type) {
           case ('satellite_pass'): {
-            let end = new Date(action.prediction.end)
+            const end = new Date(action.prediction.end)
 
-            //first check if the event shouldn't already been finished
+            // first check if the event shouldn't already been finished
             if (end < Date.now()) {
               await this.eventTooLate(event, end)
               break
             }
 
-            //then check if the tracker isn't busy with another satellite
+            // then check if the tracker isn't busy with another satellite
             if (this.trackerController.getStatus().satellite !== null) {
-              await db.changeEventStatus(event.schedule_id, 'overlap', { error: `Tracker was busy with another satellite.` })
+              await db.changeEventStatus(event.schedule_id, 'overlap', { error: 'Tracker was busy with another satellite.' })
               break
             }
 
-            //then check if the radio is free
+            // then check if the radio is free
             if (this.radioController.isBusy()) {
-              await db.changeEventStatus(event.schedule_id, 'overlap', { error: `Radio was busy?` })
+              await db.changeEventStatus(event.schedule_id, 'overlap', { error: 'Radio was busy?' })
               break
             }
 
-            //ok we can continue
+            // ok we can continue
             this.eventRunning(event)
-            let duration = action.prediction.duration
+            const duration = action.prediction.duration
 
-            //naive algorithm to decide if N or S
-            let direction = action.prediction.minAzimuth < 270 && action.prediction.minAzimuth >= 90 ? 'N' : 'S'
-            let cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
+            // naive algorithm to decide if N or S
+            const direction = action.prediction.minAzimuth < 270 && action.prediction.minAzimuth >= 90 ? 'N' : 'S'
+            const cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
             logger.info(`Working directory: ${cwd}`)
 
             if (!fs.existsSync(cwd)) {
               fs.mkdirSync(cwd)
-              
             }
-
 
             logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
-            //start tracking
-            logger.debug("Starting tracker")
+            // start tracking
+            logger.debug('Starting tracker')
             this.trackerController.startTracking(action.satellite, duration)
-            logger.debug("Starting capture")
+            logger.debug('Starting capture')
 
-            let capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
+            const capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
 
             capture
               .then(async (res) => {
-                let baseband_file = res.filename
-                logger.info("starting pipeline")
+                const basebandFile = res.filename
+                logger.info('starting pipeline')
                 try {
-                  let pipeline = new Pipeline(baseband_file, action.satellite, action.prediction, direction, cwd, event.schedule_id)
+                  const pipeline = new Pipeline(basebandFile, action.satellite, action.prediction, direction, cwd, event.schedule_id)
                   await pipeline.run()
                 } catch (err) {
                   logger.error(err)
@@ -105,7 +100,6 @@ module.exports = class ScheduleRunner {
                 db.changeEventStatus(event.schedule_id, 'error', err)
               })
 
-
             break
           }
           default: {
@@ -113,32 +107,27 @@ module.exports = class ScheduleRunner {
           }
         }
       }
-
     } catch (err) {
       logger.error(err)
-    }
-    finally {
+    } finally {
       this.busy = false
     }
   }
 
-
-  async eventTooLate(event, expected_end_time) {
-    let error = `Event #${event.schedule_id} was run too late. Expected end time was ${expected_end_time.toUTCString()}, but it was run at ${(new Date()).toUTCString()}.`
+  async eventTooLate (event, expectedEndTime) {
+    const error = `Event #${event.schedule_id} was run too late. Expected end time was ${expectedEndTime.toUTCString()}, but it was run at ${(new Date()).toUTCString()}.`
     logger.error(error)
     db.changeEventStatus(event.schedule_id, 'late', { error: error })
   }
 
-  async eventNotRecognized(event) {
-    let error = `Schedule type ${event.schedule_type} not recognized.`
+  async eventNotRecognized (event) {
+    const error = `Schedule type ${event.schedule_type} not recognized.`
     logger.error(error)
     db.changeEventStatus(event.schedule_id, 'failed', { error: error })
   }
 
-  async eventRunning(event) {
+  async eventRunning (event) {
     logger.debug(`Marking event #${event.schedule_id} as running`)
     db.changeEventStatus(event.schedule_id, 'running', { start_time: Date.now() })
   }
 }
-
-
