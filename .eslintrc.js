@@ -1,5 +1,5 @@
 module.exports = {
-  ignorePatterns: ['node_modules/*', '.vscode/*'],
+  ignorePatterns: ['node_modules/*', '.vscode/*', 'static/*', 'tle/*'],
   env: {
     node: true,
     commonjs: true,
