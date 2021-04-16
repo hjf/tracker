@@ -2,12 +2,10 @@ const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
 const telegram = require('./telegram')
-
+var mkfifoSync = require('mkfifo').mkfifoSync;
 const { spawn } = require('child_process');
 var glob = require("glob");
 const imagemagickCli = require('imagemagick-cli');
-
-
 
 module.exports = class Pipeline {
 
@@ -31,30 +29,31 @@ module.exports = class Pipeline {
   }
 
   async run() {
-    // try {
-    let previous_result = { filename: this.baseband_file }
+    try {
+      let previous_result = { filename: this.baseband_file }
 
-    for (let step of this.satellite.pipeline) {
-      logger.debug(`[${this.schedule_id}] Running pipeline step: ${step.step}`)
+      for (let step of this.satellite.pipeline) {
+        logger.debug(`[${this.schedule_id}] Running pipeline step: ${step.step}`)
 
-      let handler = this.handlers[step.program.handler];
-      let input_file = previous_result.filename
+        let handler = this.handlers[step.program.handler];
+        let input_file = previous_result.filename
 
-      if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
+        if (!handler) throw new Error(`Handler ${step.program.handler} not found.`)
 
-      previous_result = await handler(input_file, step.program.args)
+        previous_result = await handler(input_file, step.program.args)
 
-      console.log(previous_result)
-      if (step.program.args.delete)
-        fs.unlinkSync(path.join(this.cwd, input_file))
+        logger.debug(previous_result)
+        if (step.program.args.delete)
+          fs.unlinkSync(path.join(this.cwd, input_file))
+      }
+    } finally {
+      fs.rmdirSync(this.cwd, { recursive: true })
     }
-
   }
 
   thereIsLight() {
-    return this.prediction.sun_position.altitude > 5
+    return this.prediction.sun_position.altitude > 0
   }
-
 
   async DenoiseAndRotate(denoise) {
 
@@ -145,15 +144,29 @@ module.exports = class Pipeline {
     if (args.preset === 'noaa')
       return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset)
     else
-      return this.Aang23DemodsBaseSinglecore('C-BPSK-Demodulator-Batch', input_file, args.preset)
+      return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', input_file, args.preset, true)
   }
 
   async QPSK_Demodulator(input_file, args) {
     return this.Aang23DemodsBase('QPSK-Demodulator-Batch', input_file, args.preset)
   }
 
-  async Aang23DemodsBase(command, input_file, preset) {
+  async Aang23DemodsBase(command, input_file, preset, singlecore = false) {
+
+    mkfifoSync(path.join(this.cwd, input_file) + 'fifo', 438); //438=0666
+
+    logger.debug(`/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`)
+
+    let zargs = ['-c', `/usr/bin/zstd -d --stdout ${input_file} > ${input_file}fifo`]
+
+    this.GenericSpawner('/bin/sh', zargs)
+
+    input_file += 'fifo'
+
+    if (singlecore)
+      return this.Aang23DemodsBaseSinglecore(command, input_file, preset)
     //Example filename: baseband_1610109078512_1701300_6000000.wav
+
     const [fn] = input_file.split('.') //remove extension
     const [, , , samplerate] = fn.split('_') // split by _, destructure ignoring 0, 1, 2
     logger.debug("Starting demod")
@@ -198,9 +211,10 @@ module.exports = class Pipeline {
 
   GenericSpawner(command, args, rundir = '/usr/local/bin') {
 
-    console.log(command)
-    console.log(args)
+    logger.debug(command)
+    logger.debug(args)
 
+    if (command === '/bin/sh') rundir = ''
 
     return new Promise((resolve, reject) => {
       try {

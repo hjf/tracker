@@ -30,7 +30,7 @@ module.exports = class RadioController {
         let nsamples = (samplerate * (duration_ms / 1000)).toFixed(0).toString() //samplerate x duration = n of samples to capture
         logger.debug(`Will capture ${nsamples} samples`)
 
-        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.wav`
+        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
         filename = path.join(filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
@@ -41,11 +41,16 @@ module.exports = class RadioController {
           '-n', nsamples,
           '-t', '2', //sample type 2=INT16_IQ(default)
           '-a', samplerate.toString(),
-          '-r', filename,
-          '-p', '1'
+          //'-r', filename,
+          '-r', '-',
+          '-p', '1',
+          '|',
+          'zstd', '-o', filename
         ]
 
-        this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
+        let rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
+        // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
+        this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
 
         // this.currentprocess.stderr.on('data', () => { })
         // this.currentprocess.stdout.on('data', () => { })
