@@ -17,8 +17,13 @@ module.exports = class SocketIoTransport extends Transport {
       this.emit('logged', info)
     })
 
+    let msg = info
+    if (info instanceof Error) {
+      msg = Error.message
+    }
+
     if (this.io) {
-      this.io.emit('log', info)
+      this.io.emit('log', msg)
     }
 
     callback()
