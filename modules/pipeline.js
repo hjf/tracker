@@ -2,8 +2,7 @@ const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
 const telegram = require('./telegram')
-const mkfifoSync = require('mkfifo').mkfifoSync
-const { spawn } = require('child_process')
+const { spawn, execSync } = require('child_process')
 const glob = require('glob')
 const imagemagickCli = require('imagemagick-cli')
 
@@ -134,7 +133,10 @@ module.exports = class Pipeline {
   }
 
   async Aang23DemodsBase (command, inputFile, preset, singlecore = false) {
-    mkfifoSync(path.join(this.cwd, inputFile) + 'fifo', 438) // 438=0666
+    const mkfifocmd = `/usr/bin/mkfifo -m 0666 ${path.join(this.cwd, inputFile)}fifo`
+
+    logger.info(mkfifocmd)
+    execSync(mkfifocmd)
 
     logger.debug(`/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`)
 
