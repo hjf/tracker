@@ -23,7 +23,7 @@ const TrackerController = require('./modules/tracker-controller')
 const RadioController = require('./modules/radio-controller');
 
 (
-  async function() {
+  async function () {
     try {
       const port = db.getSetting('http_port')
       app.use(express.static(path.join(__dirname, 'static')))
