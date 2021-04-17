@@ -20,7 +20,8 @@ const SQLiteTransport = require('./modules/logger-transport-sqlite')
 // my classes
 const ScheduleRunner = require('./modules/schedulerunner')
 const TrackerController = require('./modules/tracker-controller')
-const RadioController = require('./modules/radio-controller');
+const RadioController = require('./modules/radio-controller')
+const { exit } = require('process');
 
 (
   async function () {
@@ -51,16 +52,21 @@ const RadioController = require('./modules/radio-controller');
         res.json(await db.getSatellites())
       })
 
+      logger.add(new SocketIoTransport({ io: io, level: 'debug', timestamp: true }))
+      logger.add(new SQLiteTransport({ level: 'debug' }))
+
       app.get('/getLogs', async (req, res) => {
         res.json(await db.getLogs())
       })
 
+      if (!(await db.doMigrations())) {
+        logger.error('Failed migrations, exiting')
+        exit(255)
+      }
+
       http.listen(port, () => { logger.info(`Listening at http://localhost:${port}`) })
 
       // sends log to web in real time
-      logger.add(new SocketIoTransport({ io: io, level: 'debug', timestamp: true }))
-      logger.add(new SQLiteTransport({ level: 'debug' }))
-
       const location = db.getSetting('ground_station_location')
 
       const trackerController = new TrackerController(io, location)
