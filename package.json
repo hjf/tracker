@@ -31,6 +31,7 @@
     "sqlite3": "^5.0.0",
     "suncalc": "^1.8.0",
     "tle.js": "^4.2.8",
+    "uuid": "^8.3.2",
     "v8-compile-cache": "^2.3.0",
     "winston": "^3.3.3",
     "yargs": "^16.2.0"
