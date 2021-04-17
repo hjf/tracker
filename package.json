@@ -32,14 +32,15 @@
     "sqlite3": "^5.0.0",
     "suncalc": "^1.8.0",
     "tle.js": "^4.2.8",
+    "v8-compile-cache": "^2.3.0",
     "winston": "^3.3.3",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "eslint": "^7.17.0",
+    "eslint": "^7.24.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0"
+    "eslint-plugin-promise": "^4.3.1"
   }
 }
