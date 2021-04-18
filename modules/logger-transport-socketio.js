@@ -19,7 +19,7 @@ module.exports = class SocketIoTransport extends Transport {
 
     let msg = info
     if (info instanceof Error) {
-      msg = Error.message
+      msg = msg.message
     }
 
     if (this.io) {
