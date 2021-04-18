@@ -33,12 +33,12 @@ module.exports = class TrackerController {
           resolve(res)
         }
 
-        this.port.write(message.trim() + '\n', (err) => {
-          if (err) {
+        this.port.write(message.trim() + '\n', (error) => {
+          if (error) {
             if (to && to._destroyed === false) { clearTimeout(to) }
-            logger.error('Serial this.port error: ', err.message)
+            logger.error('Serial port error: ', error)
             sem.leave()
-            reject(err)
+            reject(new Error(error))
           }
         })
       })
@@ -47,15 +47,15 @@ module.exports = class TrackerController {
 
   initializeSerialPort () {
     this.port = new Serialport('/dev/ttyUSB0', { baudRate: 115200, autoOpen: false })
-    this.port.on('error', (err) => { logger.error('Serial port error: ' + err) })
-    this.port.on('closed', () => { logger.error('Serial port closed, will try reopening in 10 seconds.'); setTimeout(() => { this.initializeSerialPort() }, 10000) })
+    this.port.on('error', (error) => { logger.error('Serial port error: ' + error || '') })
+    this.port.on('closed', () => { logger.error('Serial port closed, will try reopening in 10 seconds.'); setTimeout(() => this.initializeSerialPort(), 10000) })
     this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
     this.parser.on('data', (data) => this.processSerialPortData(data))
     this.port.open((err) => {
       if (!err) { return }
 
-      logger.error(`Could not open serial port: ${err.message}. Will retry in 10 seconds.`)
-      setTimeout(this.initializeSerialPort, 10000) // next attempt to open after 10s
+      logger.error(`Could not open serial port: ${err}. Will retry in 10 seconds.`)
+      setTimeout(() => this.initializeSerialPort(), 10000) // next attempt to open after 10s
     })
   }
 
@@ -65,7 +65,6 @@ module.exports = class TrackerController {
         this.responseHandler(data.trim())
         this.responseHandler = null
       } else {
-        // if(data.trim()!=='ok')  because firmware error that returns ok twice
         if (data.trim() !== 'ok') logger.warn('Data arrived on serial port, but there was no handler')
       }
     } catch (err) {
@@ -106,7 +105,7 @@ module.exports = class TrackerController {
     }
 
     this.pollingHandler = setInterval(() => {
-      this.serialWrite('M114').then(handleM114).catch(logger.error)
+      this.serialWrite('M114').then(handleM114).catch((error) => logger.error(error.message))
     }, 5000)
   }
 
