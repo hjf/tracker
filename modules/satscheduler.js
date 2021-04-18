@@ -77,7 +77,7 @@ async function generateSchedule (force) {
         prediction.duration = endTime - startTime
 
         // I don't think this works if the sat crosses over the poles
-        prediction.direction = prediction.startPosition.azimuth < prediction.endPosition.azimuth ? 'N' : 'S'
+        prediction.direction = prediction.startPosition.latitude < prediction.endPosition.latitude ? 'N' : 'S'
       }
 
       for (const prediction of predictions) {
