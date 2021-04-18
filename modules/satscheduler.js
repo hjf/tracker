@@ -57,7 +57,8 @@ async function generateSchedule (force) {
         let minelev = 0
         do {
           startTime += 5000
-          minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], startTime).elevation
+          prediction.startPosition = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], startTime)
+          minelev = prediction.startPosition.elevation
         } while (minelev < startEndElevation)
         prediction.start = startTime
       }
@@ -69,10 +70,14 @@ async function generateSchedule (force) {
         let minelev = 0
         do {
           endTime -= 5000
-          minelev = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], endTime).elevation
+          prediction.endPosition = jspredict.observe(sat.tle, [location.lat, location.lon, location.alt], endTime)
+          minelev = prediction.endPosition.elevation
         } while (minelev < startEndElevation)
         prediction.end = endTime
         prediction.duration = endTime - startTime
+
+        // I don't think this works if the sat crosses over the poles
+        prediction.direction = prediction.startPosition.azimuth < prediction.endPosition.azimuth ? 'N' : 'S'
       }
 
       for (const prediction of predictions) {

@@ -7,11 +7,10 @@ const glob = require('glob')
 const imagemagickCli = require('imagemagick-cli')
 
 module.exports = class Pipeline {
-  constructor (basebandFile, satellite, prediction, direction, cwd, scheduleId) {
+  constructor (basebandFile, satellite, prediction, cwd, scheduleId) {
     this.baseband_file = basebandFile
     this.satellite = satellite
     this.prediction = prediction
-    this.direction = direction
     this.cwd = cwd
     this.schedule_id = scheduleId
     this.handlers = {
@@ -52,13 +51,13 @@ module.exports = class Pipeline {
     return this.prediction.sun_position.altitude > 0
   }
 
-  async DenoiseAndRotate (denoise) {
+  async DenoiseAndRotate (denoise, direction) {
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
     let command = ''
 
     if (denoise) command += ' -median 3 '
 
-    if (this.passDirection === 'N') command += ' -rotate 180 '
+    if (direction === 'N') command += ' -rotate 180 '
 
     const workers = pngs.map(filename => imagemagickCli.exec(`convert ${filename} ${command} ${filename}-proc.jpg`).catch(err => logger.error(`Error processing image ${filename}: ${err}`)))
     await Promise.all(workers)
@@ -91,7 +90,7 @@ module.exports = class Pipeline {
     const pargs = ['met-msu-mr.bin']// always use same prefix as set in METEOR_Demux
     await this.GenericSpawner(command, pargs)
 
-    const proc = await this.DenoiseAndRotate(this.direction)
+    const proc = await this.DenoiseAndRotate(false, this.prediction.direction)
 
     if (this.thereIsLight()) { return { filename: 'MSU-MR-RGB-221-EQU.png' + (proc ? '-proc.jpg' : '') } } else { return { filename: 'MSU-MR-5.png' + (proc ? '-proc.jpg' : '') } }
   }
@@ -102,7 +101,7 @@ module.exports = class Pipeline {
     await this.GenericSpawner(command, [inputFile])
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
 
-    const proc = await this.DenoiseAndRotate(false.direction)
+    const proc = await this.DenoiseAndRotate(false, this.prediction.direction)
 
     if (this.thereIsLight(this.prediction)) { return { filename: 'AVHRR-RGB-221-EQU.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } } else { return { filename: 'AVHRR-4.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } }
   }
@@ -119,7 +118,7 @@ module.exports = class Pipeline {
     await this.GenericSpawner(command, [inputFile])
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
 
-    const proc = await this.DenoiseAndRotate(this.direction)
+    const proc = await this.DenoiseAndRotate(true, this.prediction.direction)
 
     if (this.thereIsLight(this.prediction)) { return { filename: 'AVHRR-RGB-221-EQU.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } } else { return { filename: 'AVHRR-4.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } }
   }

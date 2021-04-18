@@ -62,8 +62,6 @@ module.exports = class ScheduleRunner {
             this.eventRunning(event)
             const duration = action.prediction.duration
 
-            // naive algorithm to decide if N or S
-            const direction = action.prediction.minAzimuth < 270 && action.prediction.minAzimuth >= 90 ? 'N' : 'S'
             const cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
             logger.info(`Working directory: ${cwd}`)
@@ -72,7 +70,7 @@ module.exports = class ScheduleRunner {
               fs.mkdirSync(cwd)
             }
 
-            logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${direction === 'N' ? 'Northbound' : 'Southbound'}.`)
+            logger.info(`Pass duration is ${fmtMSS((duration / 1000).toFixed(0))}, max elevation: ${action.prediction.maxElevation.toFixed(0)}, direction: ${action.prediction.direction === 'N' ? 'Northbound' : 'Southbound'}.`)
 
             // start tracking
             logger.debug('Starting tracker')
@@ -86,7 +84,7 @@ module.exports = class ScheduleRunner {
                 const basebandFile = res.filename
                 logger.info('starting pipeline')
                 try {
-                  const pipeline = new Pipeline(basebandFile, action.satellite, action.prediction, direction, cwd, event.schedule_id)
+                  const pipeline = new Pipeline(basebandFile, action.satellite, action.prediction, cwd, event.schedule_id)
                   await pipeline.run()
                 } catch (err) {
                   logger.error(err)
