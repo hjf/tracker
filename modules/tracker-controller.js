@@ -171,7 +171,7 @@ module.exports = class TrackerController {
       if (this.satellite) {
         reject(new Error(`Currently tracking ${this.satellite.name}`))
       } else {
-        this.serialWrite('G01 A0 E0 F-1')
+        this.serialWrite('G01 A0 E900 F-1')
           .then(() => { resolve('OK') })
           .catch(reject)
       }
