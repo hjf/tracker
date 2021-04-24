@@ -1,6 +1,6 @@
 const logger = require('../logger')
 const path = require('path')
-const { spawn, exec } = require('child_process')
+const { spawn, exec, execSync } = require('child_process')
 
 // const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
 const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
@@ -60,6 +60,10 @@ module.exports = class RadioController {
           args = [...args,
             'nc', '-u', this.remoteProcessor.address, this.remoteProcessor.slavePort
           ]
+          const listeCommand = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -u -l -p  | /usr/bin/zst ${filename}' `
+          logger.debug(listeCommand)
+          execSync(listeCommand)
+          logger.debug('Remote listening OK')
         } else {
           args = [...args,
             'zstd', '-o', filename]
