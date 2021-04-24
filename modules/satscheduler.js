@@ -9,7 +9,7 @@ async function generateSchedule (force) {
   try {
     logger.info('Generating predictions')
     const location = db.getSetting('ground_station_location')
-    const minElevation = db.getSetting('satellite_min_elevation') || 10
+    const minElevation = db.getSetting('satellite_min_elevation') || 15
 
     const passes = await db.getScheduledEvents('satellite_pass')
 
@@ -47,7 +47,7 @@ async function generateSchedule (force) {
         50
       )
 
-      const startEndElevation = db.getSetting('start_end_elevation') || 5
+      const startEndElevation = db.getSetting('start_end_elevation') || 15
 
       // for each prediction, offset it until it's between start_end_elevation
 
