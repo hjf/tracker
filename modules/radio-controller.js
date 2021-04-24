@@ -68,25 +68,30 @@ module.exports = class RadioController {
         'zstd', '-o', filename]
     }
 
-    const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
-    // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
-    this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
+    const radioPromise = () => {
+      return new Promise((resolve, reject) => {
+        const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
+        // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
+        this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
 
-    this.currentprocess.on('exit', (code) => {
-      try {
-        exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
-      } catch (err) {
-        logger.error(err)
-      }
+        this.currentprocess.on('exit', (code) => {
+          try {
+            exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
+          } catch (err) {
+            logger.error(err)
+          }
 
-      logger.info(`airspy_rx ended with code ${code}.`)
-      return { filename: filename, stdout: stdout, stderr: stderr }//, stdout: stdout, stderr: stderr })
-    })
+          logger.info(`airspy_rx ended with code ${code}.`)
+          resolve({ filename: filename, stdout: stdout, stderr: stderr })//, stdout: stdout, stderr: stderr })
+        })
 
-    this.currentprocess.on('error', (err) => {
-      logger.info(`Error spawning airspy_rx: ${err}.`)
-      throw new Error(err)
-    })
+        this.currentprocess.on('error', (err) => {
+          logger.info(`Error spawning airspy_rx: ${err}.`)
+          reject(err)
+        })
+      })
+    }
+    await radioPromise()
     // } catch (err) {
     //   throw new Error(err)
     // }
