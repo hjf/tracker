@@ -7,6 +7,8 @@ const glob = require('glob')
 const imagemagickCli = require('imagemagick-cli')
 
 module.exports = class Pipeline {
+  isRemote () { return this.remoteProcessor && this.remoteProcessor.enabled }
+
   constructor (basebandFile, satellite, prediction, cwd, scheduleId) {
     this.baseband_file = basebandFile
     this.satellite = satellite

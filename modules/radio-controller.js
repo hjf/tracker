@@ -11,11 +11,14 @@ const AIRSPY_GPIO_EXECUTABLE = '/usr/bin/airspy_gpio'
 // }
 
 module.exports = class RadioController {
-  constructor (io) {
+  constructor (io, remoteProcessor) {
     this.io = io
     this.busy = false
     this.currentprocess = null
+    this.remoteProcessor = remoteProcessor
   }
+
+  isRemote () { return this.remoteProcessor && this.remoteProcessor.enabled }
 
   isBusy () { return this.busy }
 
@@ -24,16 +27,22 @@ module.exports = class RadioController {
       try {
         const stderr = ''
         const stdout = ''
+        let filename = ''
+
         logger.debug('Starting baseband capture')
 
         const nsamples = (samplerate * (durationMilliseconds / 1000)).toFixed(0).toString() // samplerate x duration = n of samples to capture
         logger.debug(`Will capture ${nsamples} samples`)
 
-        let filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
-        filename = path.join(filename)
-        logger.info(`Starting capture with airspy_rx into file ${filename}`)
+        if (this.isRemote()) {
+          logger.info(`Starting capture with airspy_rx into remote ${this.remoteProcessor.address}`)
+        } else {
+          filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
+          filename = path.join(filename)
+          logger.info(`Starting capture with airspy_rx into file ${filename}`)
+        }
 
-        const args = [
+        let args = [
           '-f', frequency.toString(), // frequency for airspy_rx is in mhz!
           '-b', '1', // bias tee on
           '-h', '20', // gain mode "sensitivity", value 20
@@ -43,27 +52,22 @@ module.exports = class RadioController {
           // '-r', filename,
           '-r', '-',
           '-p', '1',
-          '|',
-          'zstd', '-o', filename
+          '|'
+          // ,'zstd', '-o', filename
         ]
+
+        if (this.isRemote()) {
+          args = [...args,
+            'nc', '-u', this.remoteProcessor.address, this.remoteProcessor.slavePort
+          ]
+        } else {
+          args = [...args,
+            'zstd', '-o', filename]
+        }
 
         const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
         // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
         this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
-
-        // this.currentprocess.stderr.on('data', () => { })
-        // this.currentprocess.stdout.on('data', () => { })
-
-        // this.currentprocess.stderr.on('data', (data) => {
-        //   data = ab2str(data);
-        //   // logger.debug(data);
-        //   stderr += data
-        // })
-        // this.currentprocess.stdout.on('data', (data) => {
-        //   data = ab2str(data);
-        //   // logger.debug(data);
-        //   stdout += data
-        // })
 
         this.currentprocess.on('exit', (code) => {
           try {

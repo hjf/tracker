@@ -4,32 +4,31 @@ const Pipeline = require('./pipeline')
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
+const e = require('cors')
 // https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
 function fmtMSS (s) { return (s - (s %= 60)) / 60 + (s > 9 ? ':' : ':0') + s }
+const { execSync } = require('child_process')
 
 module.exports = class ScheduleRunner {
-  constructor (io, location, trackerController, radioController) {
+  constructor (io, location, trackerController, radioController, remoteProcessor) {
     this.io = io
     this.location = location
     this.trackerController = trackerController
     this.radioController = radioController
     this.busy = false
+    this.remoteProcessor = remoteProcessor
   }
+
+  isRemote () { return this.remoteProcessor && this.remoteProcessor.enabled }
 
   async processEvents () {
     try {
       if (this.busy) throw new Error('Event processor was called while the previous run wasn\'t finished.')
 
       this.busy = true
-
-      //       logger.debug("Schedule runner started")
-
       const events = await db.getScheduledEventsToRun()
 
-      if (events.length === 0) {
-        //         setTimeout(() => { logger.debug("No pending scheduled events") }, 10)
-        return false
-      }
+      if (events.length === 0) { return false }
 
       logger.debug(`Starting to process ${events.length} event${events.length === 1 ? '.' : 's.'}`)
 
@@ -64,7 +63,14 @@ module.exports = class ScheduleRunner {
 
             const cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
+
             logger.info(`Working directory: ${cwd}`)
+
+            if (this.isRemote()) {
+              const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'sudo mkdir ${path.join(this.cwd)}' `
+              logger.info(mkdirCmd)
+              execSync(mkdirCmd)
+            }
 
             if (!fs.existsSync(cwd)) {
               fs.mkdirSync(cwd)
