@@ -9,12 +9,13 @@ const imagemagickCli = require('imagemagick-cli')
 module.exports = class Pipeline {
   isRemote () { return this.remoteProcessor && this.remoteProcessor.enabled }
 
-  constructor (basebandFile, satellite, prediction, cwd, scheduleId) {
+  constructor (basebandFile, satellite, prediction, cwd, scheduleId, remoteProcessor) {
     this.baseband_file = basebandFile
     this.satellite = satellite
     this.prediction = prediction
     this.cwd = cwd
     this.schedule_id = scheduleId
+    this.remoteProcessor = remoteProcessor
     this.handlers = {
       'C-BPSK-Demodulator': this.CBPSKDemodulator.bind(this),
       'QPSK-Demodulator': this.QPSKDemodulator.bind(this),

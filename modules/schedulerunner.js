@@ -88,7 +88,7 @@ module.exports = class ScheduleRunner {
                 const basebandFile = res.filename
                 logger.info('starting pipeline')
                 try {
-                  const pipeline = new Pipeline(basebandFile, action.satellite, action.prediction, cwd, event.schedule_id)
+                  const pipeline = new Pipeline(basebandFile, action.satellite, action.prediction, cwd, event.schedule_id, this.remoteProcessor)
                   await pipeline.run()
                 } catch (err) {
                   logger.error(err)
