@@ -91,7 +91,7 @@ module.exports = class RadioController {
         })
       })
     }
-    await radioPromise()
+    return await radioPromise()
     // } catch (err) {
     //   throw new Error(err)
     // }
