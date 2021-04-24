@@ -60,7 +60,7 @@ module.exports = class RadioController {
           args = [...args,
             'nc', '-u', this.remoteProcessor.address, this.remoteProcessor.slavePort
           ]
-          const listeCommand = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -u -l -p  | /usr/bin/zst ${filename}' `
+          const listeCommand = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -u -l -p ${this.remoteProcessor.slavePort}  | /usr/bin/zstd ${filename}' `
           logger.debug(listeCommand)
           execSync(listeCommand)
           logger.debug('Remote listening OK')
