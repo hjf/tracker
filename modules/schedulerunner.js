@@ -65,7 +65,7 @@ module.exports = class ScheduleRunner {
             logger.info(`Working directory: ${cwd}`)
 
             if (this.isRemote()) {
-              const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'sudo mkdir -p ${cwd}' `
+              const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'mkdir -p ${cwd}' `
               logger.info(mkdirCmd)
               execSync(mkdirCmd)
             }
