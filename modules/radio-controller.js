@@ -36,11 +36,10 @@ module.exports = class RadioController {
 
         if (this.isRemote()) {
           logger.info(`Starting capture with airspy_rx into remote ${this.remoteProcessor.address}`)
-        } else {
-          filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
-          filename = path.join(filename)
-          logger.info(`Starting capture with airspy_rx into file ${filename}`)
         }
+        filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
+        filename = path.join(filename)
+        logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
         let args = [
           '-f', frequency.toString(), // frequency for airspy_rx is in mhz!
@@ -60,7 +59,7 @@ module.exports = class RadioController {
           args = [...args,
             'nc', '-u', this.remoteProcessor.address, this.remoteProcessor.slavePort
           ]
-          const listeCommand = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -u -l -p ${this.remoteProcessor.slavePort}  | /usr/bin/zstd ${filename}' `
+          const listeCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -u -l -p ${this.remoteProcessor.slavePort}  | /usr/bin/zstd ${filename}' `
           logger.debug(listeCommand)
           execSync(listeCommand)
           logger.debug('Remote listening OK')
