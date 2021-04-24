@@ -73,7 +73,7 @@ const { exit } = require('process');
 
       const trackerController = new TrackerController(io, location)
       const radioController = new RadioController(io, remoteProcessor)
-      const scheduleRunner = new ScheduleRunner(io, location, trackerController, radioController)
+      const scheduleRunner = new ScheduleRunner(io, location, trackerController, radioController, remoteProcessor)
 
       trackerController.startPolling()
 
