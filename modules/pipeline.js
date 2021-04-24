@@ -203,12 +203,16 @@ module.exports = class Pipeline {
         const stderr = ''
         const stdout = ''
 
-        //      command = path.join(global.original_this.cwd, 'modules', 'decoders', command + '.exe')
         command = path.join(rundir, command)
-        this.spwaned_process = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
+        if (this.isRemote()) {
+          args = [command, ...args]
+          args = [`-f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${args.join(' ')}'`]
+          command = '/usr/bin/ssh'
+          logger.info(`${command} ${args}`)
+          this.spwaned_process = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
+        }
 
-        // this.spwaned_process.stderr.on('data', () => { })
-        // this.spwaned_process.stdout.on('data', () => { })
+        this.spwaned_process = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
 
         this.spwaned_process.on('exit', (code) => {
           logger.info(`${command} ended with code ${code}.`)
