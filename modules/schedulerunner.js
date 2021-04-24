@@ -4,7 +4,6 @@ const Pipeline = require('./pipeline')
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
-const e = require('cors')
 // https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
 function fmtMSS (s) { return (s - (s %= 60)) / 60 + (s > 9 ? ':' : ':0') + s }
 const { execSync } = require('child_process')
@@ -39,8 +38,6 @@ module.exports = class ScheduleRunner {
           case ('satellite_pass'): {
             const end = new Date(action.prediction.end)
 
-            this.remoteProcessor = db.getSetting('remote')
-
             // first check if the event shouldn't already been finished
             if (end < Date.now()) {
               await this.eventTooLate(event, end)
@@ -65,11 +62,10 @@ module.exports = class ScheduleRunner {
 
             const cwd = path.join(os.tmpdir(), `tracker_event_${event.schedule_id}`)
 
-
             logger.info(`Working directory: ${cwd}`)
 
             if (this.isRemote()) {
-              const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'sudo mkdir ${path.join(this.cwd)}' `
+              const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'sudo mkdir -p ${cwd}' `
               logger.info(mkdirCmd)
               execSync(mkdirCmd)
             }
@@ -85,7 +81,7 @@ module.exports = class ScheduleRunner {
             this.trackerController.startTracking(action.satellite, duration)
             logger.debug('Starting capture')
 
-            const capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd, this.remoteProcessor)
+            const capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
 
             capture
               .then(async (res) => {
@@ -114,6 +110,7 @@ module.exports = class ScheduleRunner {
         }
       }
     } catch (err) {
+      console.error(err)
       logger.error(err)
     } finally {
       this.busy = false

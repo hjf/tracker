@@ -69,8 +69,10 @@ const { exit } = require('process');
       // sends log to web in real time
       const location = db.getSetting('ground_station_location')
 
+      const remoteProcessor = db.getSetting('remote')
+
       const trackerController = new TrackerController(io, location)
-      const radioController = new RadioController(io)
+      const radioController = new RadioController(io, remoteProcessor)
       const scheduleRunner = new ScheduleRunner(io, location, trackerController, radioController)
 
       trackerController.startPolling()
