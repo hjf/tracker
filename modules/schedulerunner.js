@@ -39,6 +39,8 @@ module.exports = class ScheduleRunner {
           case ('satellite_pass'): {
             const end = new Date(action.prediction.end)
 
+            this.remoteProcessor = db.getSetting('remote')
+
             // first check if the event shouldn't already been finished
             if (end < Date.now()) {
               await this.eventTooLate(event, end)
@@ -83,7 +85,7 @@ module.exports = class ScheduleRunner {
             this.trackerController.startTracking(action.satellite, duration)
             logger.debug('Starting capture')
 
-            const capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd)
+            const capture = this.radioController.startCapture(action.satellite.frequency, action.satellite.samplerate, duration, cwd, this.remoteProcessor)
 
             capture
               .then(async (res) => {
