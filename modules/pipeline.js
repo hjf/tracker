@@ -145,7 +145,7 @@ module.exports = class Pipeline {
 
     logger.info(mkfifocmd)
     if (this.isRemote()) {
-      execSync(`/usr/bin/ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${mkfifocmd}'`)
+      // execSync(`/usr/bin/ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${mkfifocmd}'`)
     } else {
       execSync(mkfifocmd)
     }
@@ -153,16 +153,16 @@ module.exports = class Pipeline {
     logger.debug(`/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`)
 
     if (this.isRemote()) {
-      const zargs = [`-c -d --stdout ${inputFile} > ${inputFile}fifo`]
+      // const zargs = [`-c -d --stdout ${inputFile} > ${inputFile}fifo`]
 
-      this.GenericSpawner('/usr/bin/zstd', zargs)
+      // this.GenericSpawner('/usr/bin/zstd', zargs)
     } else {
       const zargs = ['-c', `/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`]
 
       this.GenericSpawner('/bin/sh', zargs)
+      inputFile += 'fifo'
     }
 
-    inputFile += 'fifo'
 
     if (singlecore) { return this.Aang23DemodsBaseSinglecore(command, inputFile, preset) }
     // Example filename: baseband_1610109078512_1701300_6000000.wav
@@ -223,7 +223,7 @@ module.exports = class Pipeline {
         command = path.join(rundir, command)
         if (this.isRemote()) {
           args = [command, ...args]
-          args = [`-p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'cd ${this.cwd} && ${args.join(' ')}'`]
+          args = [`-p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'cd ${this.cwd} ; ${args.join(' ')}'`]
           command = '/usr/bin/ssh'
           logger.info(`!!!REMOTE COMMAND ${command} ${args}`)
           spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true, shell: true })

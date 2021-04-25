@@ -33,11 +33,14 @@ module.exports = class RadioController {
 
     const nsamples = (samplerate * (durationMilliseconds / 1000)).toFixed(0).toString() // samplerate x duration = n of samples to capture
     logger.debug(`Will capture ${nsamples} samples`)
+    filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}`
 
     if (this.isRemote()) {
       logger.info(`Starting capture with airspy_rx into remote ${this.remoteProcessor.address}`)
+    } else {
+      filename = filename + '.zst'
     }
-    filename = `baseband_${Date.now()}_${(frequency * 1000).toFixed(0)}_${samplerate}.zst`
+
     filename = path.join(filename)
     logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
@@ -59,7 +62,7 @@ module.exports = class RadioController {
       args = [...args,
         'nc', '-u', '-w', '1', this.remoteProcessor.address, this.remoteProcessor.slavePort
       ]
-      const listenCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -w 1 -u -l -p ${this.remoteProcessor.slavePort}  | /usr/bin/zstd -1 - -o ${cwd}/${filename}' `
+      const listenCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -w 1 -u -l -p ${this.remoteProcessor.slavePort}  > ${cwd}/${filename}' `
       logger.debug(listenCommand)
       await exec(listenCommand)
       logger.debug('Remote listening OK')
