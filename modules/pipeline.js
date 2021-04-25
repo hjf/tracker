@@ -48,7 +48,7 @@ module.exports = class Pipeline {
         //        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
       }
     } finally {
-      fs.rmdirSync(this.cwd, { recursive: true })
+      //fs.rmdirSync(this.cwd, { recursive: true })
     }
   }
 
@@ -165,7 +165,6 @@ module.exports = class Pipeline {
       inputFile += 'fifo'
     }
 
-
     if (singlecore) { return this.Aang23DemodsBaseSinglecore(command, inputFile, preset) }
     // Example filename: baseband_1610109078512_1701300_6000000.wav
 
@@ -232,7 +231,6 @@ module.exports = class Pipeline {
         } else {
           spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
         }
-
 
         spawnedProcess.on('exit', (code) => {
           logger.info(`${command} ended with code ${code}.`)
