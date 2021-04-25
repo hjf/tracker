@@ -45,7 +45,7 @@ module.exports = class Pipeline {
         previousResult = await handler(inputFile, step.program.args)
 
         logger.debug(previousResult)
-//        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
+        //        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
       }
     } finally {
       fs.rmdirSync(this.cwd, { recursive: true })
@@ -58,7 +58,9 @@ module.exports = class Pipeline {
 
   async DenoiseAndRotate (denoise, direction) {
     if (this.isRemote()) {
-      await exec(`/usr/bin/scp -P ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address}:${this.cwd}/*.png ${this.cwd}`)
+      const scpcmd = `/usr/bin/scp -P ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address}:${this.cwd}/*.png ${this.cwd}`
+      logger.debug(scpcmd)
+      await exec(scpcmd)
     }
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
     let command = ''
