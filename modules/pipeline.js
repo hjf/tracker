@@ -216,32 +216,25 @@ module.exports = class Pipeline {
       try {
         const stderr = ''
         const stdout = ''
-
+        let spawnedProcess = null
         command = path.join(rundir, command)
         if (this.isRemote()) {
           args = [command, ...args]
           args = [`-p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'cd ${this.cwd} && ${args.join(' ')}'`]
           command = '/usr/bin/ssh'
           logger.info(`!!!REMOTE COMMAND ${command} ${args}`)
-          this.spwaned_process = spawn(command, args, { cwd: this.cwd, detached: true })
+          spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
         } else {
-          this.spwaned_process = spawn(command, args, { cwd: this.cwd, detached: true })
+          spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
         }
 
-        this.spwaned_process.stdout.on('data', (data) => {
-          console.log(`stdout: ${data}`)
-        })
 
-        this.spwaned_process.stderr.on('data', (data) => {
-          console.error(`stderr: ${data}`)
-        })
-
-        this.spwaned_process.on('exit', (code) => {
+        spawnedProcess.on('exit', (code) => {
           logger.info(`${command} ended with code ${code}.`)
           resolve({ code: code, stderr: stderr, stdout: stdout })
         })
 
-        this.spwaned_process.on('error', (err) => {
+        spawnedProcess.on('error', (err) => {
           logger.info(`Error spawning ${command}: ${err}.`)
           reject(new Error(err))
         })
