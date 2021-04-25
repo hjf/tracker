@@ -6,7 +6,7 @@ const fs = require('fs')
 const path = require('path')
 // https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
 function fmtMSS (s) { return (s - (s %= 60)) / 60 + (s > 9 ? ':' : ':0') + s }
-const { execSync } = require('child_process')
+const { exec } = require('child_process')
 
 module.exports = class ScheduleRunner {
   constructor (io, location, trackerController, radioController, remoteProcessor) {
@@ -67,7 +67,7 @@ module.exports = class ScheduleRunner {
             if (this.isRemote()) {
               const mkdirCmd = `ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'mkdir -p ${cwd}' `
               logger.info(mkdirCmd)
-              execSync(mkdirCmd)
+              await exec(mkdirCmd)
             }
 
             if (!fs.existsSync(cwd)) {
