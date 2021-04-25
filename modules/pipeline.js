@@ -2,7 +2,7 @@ const logger = require('../logger')
 const path = require('path')
 const fs = require('fs')
 const telegram = require('./telegram')
-const { spawn, execSync } = require('child_process')
+const { spawn, execSync, exec } = require('child_process')
 const glob = require('glob')
 const imagemagickCli = require('imagemagick-cli')
 
@@ -57,6 +57,9 @@ module.exports = class Pipeline {
   }
 
   async DenoiseAndRotate (denoise, direction) {
+    if (this.isRemote()) {
+      await exec(`/usr/bin/scp -P ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address}:${this.cwd}/*.png ${this.cwd}`)
+    }
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
     let command = ''
 
