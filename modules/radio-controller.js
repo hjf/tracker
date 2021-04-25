@@ -66,7 +66,7 @@ module.exports = class RadioController {
       ]
       const listenCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -l -N -p ${this.remoteProcessor.slavePort}  > ${cwd}/${filename}' ` // -w 1 -u
       logger.debug(listenCommand)
-      await exec(listenCommand)
+      exec(listenCommand)
       logger.debug('Remote listening OK')
     } else {
       args = [...args,
