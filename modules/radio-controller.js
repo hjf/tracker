@@ -71,34 +71,21 @@ module.exports = class RadioController {
         'zstd', '-o', filename]
     }
 
-    const radioPromise = () => {
-      return new Promise((resolve, reject) => {
-        const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
-        // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
-        this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
+    console.log('Starting capture')
 
-        this.currentprocess.on('exit', (code) => {
-          try {
-            exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
-          } catch (err) {
-            logger.error(err)
-          }
+    const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
+    // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
+    this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
 
-          logger.info(`airspy_rx ended with code ${code}.`)
-          resolve({ filename: filename, stdout: stdout, stderr: stderr })//, stdout: stdout, stderr: stderr })
-        })
-
-        this.currentprocess.on('error', (err) => {
-          logger.info(`Error spawning airspy_rx: ${err}.`)
-          reject(err)
-        })
-      })
+    try {
+      const rv = await this.currentprocess
+      await exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
+      return rv
+    } catch (err) {
+      console.error(err)
+      logger.error(err)
+      throw err
     }
-    return await radioPromise()
-    // } catch (err) {
-    //   throw new Error(err)
-    // }
-    // })
   }
 
   async stopCapture () {
