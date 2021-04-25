@@ -62,7 +62,7 @@ module.exports = class RadioController {
       args = [...args,
         'nc', this.remoteProcessor.address, this.remoteProcessor.slavePort //, '-u', '-w', '1'
       ]
-      const listenCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -l -p ${this.remoteProcessor.slavePort}  > ${cwd}/${filename}' ` // -w 1 -u
+      const listenCommand = `ssh -f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '/usr/bin/nc -l -N -p ${this.remoteProcessor.slavePort}  > ${cwd}/${filename}' ` // -w 1 -u
       logger.debug(listenCommand)
       await exec(listenCommand)
       logger.debug('Remote listening OK')
@@ -72,7 +72,6 @@ module.exports = class RadioController {
     }
 
     console.log('Starting capture')
-
 
     const radioPromise = () => {
       return new Promise((resolve, reject) => {
