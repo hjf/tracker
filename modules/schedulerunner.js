@@ -6,7 +6,8 @@ const fs = require('fs')
 const path = require('path')
 // https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
 function fmtMSS (s) { return (s - (s %= 60)) / 60 + (s > 9 ? ':' : ':0') + s }
-const { exec } = require('child_process')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 
 module.exports = class ScheduleRunner {
   constructor (io, location, trackerController, radioController, remoteProcessor) {

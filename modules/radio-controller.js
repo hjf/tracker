@@ -1,6 +1,8 @@
 const logger = require('../logger')
 const path = require('path')
-const { spawn, exec } = require('child_process')
+const { spawn } = require('child_process')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 
 // const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
 const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'

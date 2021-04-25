@@ -1,8 +1,9 @@
 const logger = require('../logger')
 const path = require('path')
-const fs = require('fs')
 const telegram = require('./telegram')
-const { spawn, execSync, exec } = require('child_process')
+const { spawn } = require('child_process')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const glob = require('glob')
 const imagemagickCli = require('imagemagick-cli')
 
@@ -29,7 +30,7 @@ module.exports = class Pipeline {
   }
 
   async run () {
-    logger.debug("REmote processor for pipeline")
+    logger.debug('REmote processor for pipeline')
     logger.debug(this.remoteProcessor)
     try {
       let previousResult = { filename: this.baseband_file }
@@ -48,7 +49,7 @@ module.exports = class Pipeline {
         //        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
       }
     } finally {
-      //fs.rmdirSync(this.cwd, { recursive: true })
+      // fs.rmdirSync(this.cwd, { recursive: true })
     }
   }
 
@@ -149,7 +150,7 @@ module.exports = class Pipeline {
     if (this.isRemote()) {
       // execSync(`/usr/bin/ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${mkfifocmd}'`)
     } else {
-      execSync(mkfifocmd)
+      await exec(mkfifocmd)
     }
 
     logger.debug(`/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`)
