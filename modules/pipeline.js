@@ -223,7 +223,7 @@ module.exports = class Pipeline {
           args = [`-p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'cd ${this.cwd} && ${args.join(' ')}'`]
           command = '/usr/bin/ssh'
           logger.info(`!!!REMOTE COMMAND ${command} ${args}`)
-          spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
+          spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true, shell: true })
         } else {
           spawnedProcess = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
         }
