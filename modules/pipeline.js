@@ -149,9 +149,15 @@ module.exports = class Pipeline {
 
     logger.debug(`/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`)
 
-    const zargs = ['-c', `/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`]
+    if (this.isRemote()) {
+      const zargs = [`-c -d --stdout ${inputFile} > ${inputFile}fifo`]
 
-    this.GenericSpawner('/bin/sh', zargs)
+      this.GenericSpawner('/usr/bin/zstd', zargs)
+    } else {
+      const zargs = ['-c', `/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`]
+
+      this.GenericSpawner('/bin/sh', zargs)
+    }
 
     inputFile += 'fifo'
 
