@@ -45,7 +45,7 @@ module.exports = class Pipeline {
         previousResult = await handler(inputFile, step.program.args)
 
         logger.debug(previousResult)
-        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
+//        if (step.program.args.delete) { fs.unlinkSync(path.join(this.cwd, inputFile)) }
       }
     } finally {
       fs.rmdirSync(this.cwd, { recursive: true })
