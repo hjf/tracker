@@ -29,6 +29,8 @@ module.exports = class Pipeline {
   }
 
   async run () {
+    logger.debug("REmote processor for pipeline")
+    logger.debug(this.remoteProcessor)
     try {
       let previousResult = { filename: this.baseband_file }
 
@@ -135,10 +137,15 @@ module.exports = class Pipeline {
   }
 
   async Aang23DemodsBase (command, inputFile, preset, singlecore = false) {
-    const mkfifocmd = `/usr/bin/mkfifo -m 0666 ${path.join(this.cwd, inputFile)}fifo`
+    const fullpath = path.join(this.cwd, inputFile)
+    const mkfifocmd = `/usr/bin/mkfifo -m 0666 ${fullpath}fifo`
 
     logger.info(mkfifocmd)
-    execSync(mkfifocmd)
+    if (this.isRemote()) {
+      execSync(`/usr/bin/ssh -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${mkfifocmd}'`)
+    } else {
+      execSync(mkfifocmd)
+    }
 
     logger.debug(`/usr/bin/zstd -d --stdout ${inputFile} > ${inputFile}fifo`)
 
@@ -207,9 +214,9 @@ module.exports = class Pipeline {
         command = path.join(rundir, command)
         if (this.isRemote()) {
           args = [command, ...args]
-          args = [`-f -p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} '${args.join(' ')}'`]
+          args = [`-p ${this.remoteProcessor.port} ${this.remoteProcessor.username}@${this.remoteProcessor.address} 'cd ${this.cwd} && ${args.join(' ')}'`]
           command = '/usr/bin/ssh'
-          logger.info(`${command} ${args}`)
+          logger.info(`!!!REMOTE COMMAND ${command} ${args}`)
           this.spwaned_process = spawn(command, args, { cwd: this.cwd, stdio: 'ignore', detached: true })
         }
 
