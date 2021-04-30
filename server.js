@@ -27,6 +27,8 @@ const { exit } = require('process');
   async function () {
     try {
       const port = db.getSetting('http_port')
+      const rotator = db.getSetting('rotator')
+      const spyserver = db.getSetting('spyserver')
       app.use(express.static(path.join(__dirname, 'static')))
 
       app.get('/', function (req, res) {
@@ -69,8 +71,8 @@ const { exit } = require('process');
       // sends log to web in real time
       const location = db.getSetting('ground_station_location')
 
-      const trackerController = new TrackerController(io, location)
-      const radioController = new RadioController(io)
+      const trackerController = new TrackerController(io, location, rotator)
+      const radioController = new RadioController(io, spyserver)
       const scheduleRunner = new ScheduleRunner(io, location, trackerController, radioController)
 
       trackerController.startPolling()

@@ -10,7 +10,7 @@ const logger = winston.createLogger({
   format: winston.format.combine(winston.format.json(), winston.format.timestamp(), uuid),
   defaultMeta: { service: 'user-service', uuid: uuidv4 },
   transports: [
-    new winston.transports.Console({ level: 'debug' })
+    new winston.transports.Console({ level: 'debug', timestamp: true })
     //
     // - Write all logs with level `error` and below to `error.log`
     // - Write all logs with level `info` and below to `combined.log`

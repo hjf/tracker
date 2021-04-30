@@ -9,5 +9,14 @@
     "lat": -27.27,
     "lon": -59.00,
     "alt": 50
+  },
+  "satellite_min_elevation": 20,
+  "rotator": {
+    "host": "1.2.3.4",
+    "port": 9292
+  },
+  "spyserver": {
+    "host": "example.com",
+    "port": 5556
   }
 }

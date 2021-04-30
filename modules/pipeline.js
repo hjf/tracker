@@ -124,7 +124,7 @@ module.exports = class Pipeline {
   }
 
   async CBPSKDemodulator (inputFile, args) {
-    if (args.preset === 'noaa') { return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', inputFile, args.preset) } else { return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', inputFile, args.preset, true) }
+    if (args.preset === 'noaa') { return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', inputFile, args.preset) } else { return this.Aang23DemodsBase('C-BPSK-Demodulator-Batch', inputFile, args.preset) }
   }
 
   async QPSKDemodulator (inputFile, args) {

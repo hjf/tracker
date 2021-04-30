@@ -1,12 +1,15 @@
 const logger = require('../logger')
 const jspredict = require('jspredict')
-const Serialport = require('serialport')
-const Readline = require('@serialport/parser-readline')
+// const Serialport = require('serialport')
+// const Readline = require('@serialport/parser-readline')
 const sem = require('semaphore')(1)
+const net = require('net')
 
 module.exports = class TrackerController {
-  constructor (io, location) {
+  constructor (io, location, rotator) {
     this.io = io
+    this.rotator = rotator
+
     this.location = [location.lat, location.lon, location.alt / 1000]
     this.rotor_status = { azimuth: 0, elevation: 0, target_azimuth: 0, target_elevation: 0 }
     this.satellite = null
@@ -16,13 +19,20 @@ module.exports = class TrackerController {
     this.last_poll = 0
     this.lastAzimuth = 0
     this.azimuthOffset = 0
+    this.rbuf = Buffer.from('')
+    this.socketReady = false
   }
 
   serialWrite (message) {
     return new Promise((resolve, reject) => {
+      if (!this.socketReady) {
+        reject(new Error('Socket not ready'))
+        return
+      }
       sem.take(() => {
         const to = setTimeout(() => {
           sem.leave()
+          this.rbuf = Buffer.from('')
           reject(new Error('Timeout'))
         }, 3000)
 
@@ -33,7 +43,7 @@ module.exports = class TrackerController {
           resolve(res)
         }
 
-        this.port.write(message.trim() + '\n', (error) => {
+        this.socket.write(message.trim() + '\n', (error) => {
           if (error) {
             if (to && to._destroyed === false) { clearTimeout(to) }
             logger.error('Serial port error: ', error)
@@ -46,20 +56,44 @@ module.exports = class TrackerController {
   }
 
   initializeSerialPort () {
-    this.port = new Serialport('/dev/ttyUSB0', { baudRate: 115200, autoOpen: false })
-    this.port.on('error', (error) => { logger.error('Serial port error: ' + error || '') })
-    this.port.on('closed', () => { logger.error('Serial port closed, will try reopening in 10 seconds.'); setTimeout(() => this.initializeSerialPort(), 10000) })
-    this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }))
-    this.parser.on('data', (data) => this.processSerialPortData(data))
-    this.port.open((err) => {
-      if (!err) { return }
+    this.socket = new net.Socket()
 
-      logger.error(`Could not open serial port: ${err}. Will retry in 10 seconds.`)
-      setTimeout(() => this.initializeSerialPort(), 10000) // next attempt to open after 10s
+    this.socket.on('error', (error) => {
+      logger.error('Serial port error: ' + error || '')
+    })
+
+    this.socket.on('close', () => {
+      this.socketReady = false
+      logger.error('Serial port closed, will try reopening in 10 seconds.')
+      setTimeout(() => this.initializeSerialPort(), 10000)
+    })
+
+    this.socket.on('data', (data) => {
+      this.processSerialPortData(data)
+    })
+
+    this.socket.connect(this.rotator.port, this.rotator.host, () => {
+      this.socketReady = true
+      logger.info('Connected to remote serial port')
     })
   }
 
-  processSerialPortData (data) {
+  nullTerminatedStringFromBuffer (buffer, encoding = 'ascii') {
+    const blen = buffer.indexOf(0)
+    return buffer.toString(encoding, 0, blen > -1 ? blen : buffer.length)
+  }
+
+  processSerialPortData (rawdata) {
+    const cbuf = this.nullTerminatedStringFromBuffer(this.rbuf)
+    const nbuf = this.nullTerminatedStringFromBuffer(rawdata)
+    const data = cbuf + nbuf
+    if (!data.endsWith('\n')) {
+      this.rbuf = Buffer.from(data)
+      return
+    }
+
+    this.rbuf = Buffer.from('')
+
     try {
       if (this.responseHandler) {
         this.responseHandler(data.trim())
@@ -68,6 +102,7 @@ module.exports = class TrackerController {
         if (data.trim() !== 'ok') logger.warn('Data arrived on serial port, but there was no handler')
       }
     } catch (err) {
+      console.log(data)
       logger.error(err)
     }
   }

@@ -11,7 +11,7 @@ async function updateTLEs (force, io) {
     const tleMaxAgeDays = db.getSetting('tle_max_age_days') || 3
     logger.debug(`TLE max age is ${tleMaxAgeDays} days`)
 
-    const maxage = new Date().getTime() / 1000 - tleMaxAgeDays * 86400
+    const maxage = new Date().getTime() - tleMaxAgeDays * 86400000
     const tlefiles = {}
 
     const sats = await db.getSatellites()

@@ -1,20 +1,21 @@
 const logger = require('../logger')
 const path = require('path')
-const { spawn, exec } = require('child_process')
+const { spawn } = require('child_process')
 
 // const AIRSPY_RX_EXECUTABLE = path.join(global.original_cwd, 'modules', 'airspyrx', 'airspy_rx.exe')
-const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
-const AIRSPY_GPIO_EXECUTABLE = '/usr/bin/airspy_gpio'
+// const AIRSPY_RX_EXECUTABLE = '/usr/bin/airspy_rx'
+// const AIRSPY_GPIO_EXECUTABLE = '/usr/bin/airspy_gpio'
 
 // function ab2str(buf) {
 //   return String.fromCharCode.apply(null, new Uint8Array(buf));
 // }
 
 module.exports = class RadioController {
-  constructor (io) {
+  constructor (io, spyserver) {
     this.io = io
     this.busy = false
     this.currentprocess = null
+    this.spyserver = spyserver
   }
 
   isBusy () { return this.busy }
@@ -33,21 +34,23 @@ module.exports = class RadioController {
         filename = path.join(filename)
         logger.info(`Starting capture with airspy_rx into file ${filename}`)
 
+        // ./ ss_client - f 1694100000 - s 6000000 - r 10.42.42.133 - q 5556 iq - g 20
         const args = [
-          '-f', frequency.toString(), // frequency for airspy_rx is in mhz!
-          '-b', '1', // bias tee on
-          '-h', '20', // gain mode "sensitivity", value 20
+          '-f', (frequency * 1000000).toFixed(0), // frequency for airspy_rx is in mhz!
+          // '-b', '1', // bias tee on
+          '-g', '20', // gain mode "sensitivity", value 20
           '-n', nsamples,
-          '-t', '2', // sample type 2=INT16_IQ(default)
-          '-a', samplerate.toString(),
+          // '-t', '2', // sample type 2=INT16_IQ(default)
+          '-s', samplerate.toString(),
           // '-r', filename,
-          '-r', '-',
-          '-p', '1',
+          '-r', this.spyserver.host,
+          '-q', this.spyserver.port.toString(), 'iq',
           '|',
           'zstd', '-o', filename
         ]
 
-        const rawargs = ['-c', AIRSPY_RX_EXECUTABLE + ' ' + args.join(' ')]
+        const rawargs = ['-c', '/usr/local/bin/ss_client' + ' ' + args.join(' ')]
+        console.log(rawargs)
         // this.currentprocess = spawn(AIRSPY_RX_EXECUTABLE, args, { cwd: cwd, stdio: 'ignore', detached: true })
         this.currentprocess = spawn('/bin/sh', rawargs, { cwd: cwd, stdio: 'ignore', detached: true })
 
@@ -66,11 +69,11 @@ module.exports = class RadioController {
         // })
 
         this.currentprocess.on('exit', (code) => {
-          try {
-            exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
-          } catch (err) {
-            logger.error(err)
-          }
+          // try {
+          //   exec(AIRSPY_GPIO_EXECUTABLE + ' -p 1 -n 13 -w 0 ')
+          // } catch (err) {
+          //   logger.error(err)
+          // }
 
           logger.info(`airspy_rx ended with code ${code}.`)
           resolve({ filename: filename, stdout: stdout, stderr: stderr })//, stdout: stdout, stderr: stderr })
