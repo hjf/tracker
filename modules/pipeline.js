@@ -90,7 +90,7 @@ module.exports = class Pipeline {
     const pargs = ['met-msu-mr.bin']// always use same prefix as set in METEOR_Demux
     await this.GenericSpawner(command, pargs)
 
-    const proc = await this.DenoiseAndRotate(false, this.prediction.direction)
+    const proc = await this.DenoiseAndRotate(true, this.prediction.direction)
 
     if (this.thereIsLight()) { return { filename: 'MSU-MR-RGB-221-EQU.png' + (proc ? '-proc.jpg' : '') } } else { return { filename: 'MSU-MR-5.png' + (proc ? '-proc.jpg' : '') } }
   }
@@ -101,7 +101,7 @@ module.exports = class Pipeline {
     await this.GenericSpawner(command, [inputFile])
     const pngs = glob.sync(path.join(this.cwd, '*.png'))
 
-    const proc = await this.DenoiseAndRotate(false, this.prediction.direction)
+    const proc = await this.DenoiseAndRotate(true, this.prediction.direction)
 
     if (this.thereIsLight(this.prediction)) { return { filename: 'AVHRR-RGB-221-EQU.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } } else { return { filename: 'AVHRR-4.png' + (proc ? '-proc.jpg' : ''), filenames: pngs } }
   }
