@@ -4,6 +4,7 @@ const jspredict = require('jspredict')
 // const Readline = require('@serialport/parser-readline')
 const sem = require('semaphore')(1)
 const net = require('net')
+const { exec } = require('child_process')
 
 module.exports = class TrackerController {
   constructor (io, location, rotator) {
@@ -21,6 +22,7 @@ module.exports = class TrackerController {
     this.azimuthOffset = 0
     this.rbuf = Buffer.from('')
     this.socketReady = false
+    this.rotatorPower = true
   }
 
   serialWrite (message) {
@@ -132,20 +134,61 @@ module.exports = class TrackerController {
           target_elevation: targetElevation,
           drivers_power: driversPower,
           satellite: this.satellite,
-          last_poll: this.last_poll
+          last_poll: this.last_poll,
+          tracker_power: true
         }
 
         this.io.emit('tracker', status)
+
+        if (driversPower === 'off') {
+          this.setRotatorPower(false)
+            .then(() => { })
+            .catch(() => { logger.error('Failing to set rotator power off') })
+        }
       }
     }
 
     this.pollingHandler = setInterval(() => {
-      this.serialWrite('M114').then(handleM114).catch((error) => logger.error(error.message))
+      console.log(this.rotatorPower)
+      if (this.rotatorPower) {
+        this.serialWrite('M114').then(handleM114).catch((error) => logger.error(error.message))
+      } else {
+        const status = {
+          azimuth: 0,
+          elevation: 90,
+          target_azimuth: 0,
+          target_elevation: 90,
+          drivers_power: 0,
+          satellite: this.satellite,
+          last_poll: this.last_poll,
+          tracker_power: false
+        }
+
+        this.io.emit('tracker', status)
+      }
     }, 5000)
   }
 
-  startTracking (satellite, timeout) {
+  setRotatorPower (powered) {
+    return new Promise((resolve, reject) => {
+      const cmd = powered ? '/usr/bin/psu-on.sh' : '/usr/bin/psu-off.sh'
+      logger.debug('Setting rotator power')
+      exec(`ssh pi@${this.rotator.host} ${cmd}`, (error, stdout, stderr) => {
+        if (error) {
+          logger.error(`Rotator power set failed, cause ${error}, stderr: ${stderr}, stdout:${stdout}`)
+          reject(new Error(error))
+        } else {
+          this.rotatorPower = powered
+          logger.debug(`Rotator set power ${powered ? 'ON' : 'OFF'} successful.`)
+          resolve()
+        }
+      })
+    })
+  }
+
+  async startTracking (satellite, timeout) {
     logger.info(`Starting to track satellite ${satellite.name} (${satellite.catalog_number})`)
+    await this.setRotatorPower(true)
 
     let trackerTimeout = timeout
 
