@@ -125,7 +125,7 @@ module.exports = class TrackerController {
         targetAzimuth /= 10
         targetElevation /= 10
 
-        this.drivers_power = driversPower
+        this.drivers_power = driversPower.trim()
 
         const status = {
           azimuth: currentAzimuth,
@@ -139,8 +139,7 @@ module.exports = class TrackerController {
         }
 
         this.io.emit('tracker', status)
-
-        if (driversPower === 'off') {
+        if (this.drivers_power === 'off' && this.rotatorPower) {
           this.setRotatorPower(false)
             .then(() => { })
             .catch(() => { logger.error('Failing to set rotator power off') })
@@ -149,7 +148,6 @@ module.exports = class TrackerController {
     }
 
     this.pollingHandler = setInterval(() => {
-      console.log(this.rotatorPower)
       if (this.rotatorPower) {
         this.serialWrite('M114').then(handleM114).catch((error) => logger.error(error.message))
       } else {
