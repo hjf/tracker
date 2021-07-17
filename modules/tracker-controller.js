@@ -139,7 +139,7 @@ module.exports = class TrackerController {
         }
 
         this.io.emit('tracker', status)
-        if (this.drivers_power === 'off' && this.rotatorPower) {
+        if (this.drivers_power === 'off' && this.rotatorPower && this.satellite === null) {
           this.setRotatorPower(false)
             .then(() => { })
             .catch(() => { logger.error('Failing to set rotator power off') })
